@@ -1,16 +1,17 @@
 import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore.js";
-import { Image, X, Smile, Send } from "lucide-react"; // Import Smile icon
-import EmojiPicker from "emoji-picker-react"; // Import emoji picker
+import { Image, X, Smile, Send } from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
 import toast from "react-hot-toast";
-import imageCompression from "browser-image-compression"; // Import image compression library
+import imageCompression from "browser-image-compression";
+import { encryptMessage } from "../lib/encryption.js";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false); // State to toggle emoji picker
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef(null);
-  const emojiPickerRef = useRef(null); // Ref for the emoji picker container
+  const emojiPickerRef = useRef(null);
   const { sendMessage } = useChatStore();
 
   const handleImageChange = async (e) => {
@@ -26,22 +27,18 @@ const MessageInput = () => {
     }
 
     try {
-      console.log("Compressing image...");
       const compressedFile = await imageCompression(file, {
-        maxSizeMB: 1, // Limit the size to 1MB
-        maxWidthOrHeight: 1024, // Resize to a maximum dimension of 1024px
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1024,
       });
 
-      console.log("Compressed file:", compressedFile);
-
+      // Convert compressed file to base64 string
       const reader = new FileReader();
       reader.onloadend = () => {
-        console.log("Image preview ready");
-        setImagePreview(reader.result);
+        setImagePreview(reader.result); // For preview and sending
       };
       reader.readAsDataURL(compressedFile);
-    } catch (error) {
-      console.error("Error processing image:", error);
+    } catch {
       toast.error("Failed to process image");
     }
   };
@@ -51,29 +48,37 @@ const MessageInput = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const secretKey = "shared-key-for-this-chat";
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
+
     try {
+      const encryptedText = text ? encryptMessage(text.trim(), secretKey) : "";
+
+      let encryptedImage = null;
+      if (imagePreview) {
+        encryptedImage = encryptMessage(imagePreview, secretKey); // Encrypt base64 string
+      }
+
       await sendMessage({
-        text: text.trim(),
-        image: imagePreview,
+        text: encryptedText,
+        image: encryptedImage,
       });
 
-      // Clear form
       setText("");
       setImagePreview(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      fileInputRef.current.value = "";
     } catch (error) {
       console.error("Failed to send message", error);
     }
   };
 
   const handleEmojiClick = (emojiObject) => {
-    setText((prevText) => prevText + emojiObject.emoji); // Append selected emoji to the text
+    setText((prevText) => prevText + emojiObject.emoji);
   };
 
-  // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -116,10 +121,9 @@ const MessageInput = () => {
         className="flex items-center gap-2 relative"
       >
         <div className="relative flex-1">
-          {/* Text Input */}
           <input
             type="text"
-            className="w-full input input-bordered rounded-lg input-sm sm:input-md pr-16" // Add padding to the right for buttons
+            className="w-full input input-bordered rounded-lg input-sm sm:input-md pr-16"
             placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -142,7 +146,6 @@ const MessageInput = () => {
           </button>
         </div>
 
-        {/* Emoji Picker Toggle Button */}
         <button
           type="button"
           className="absolute top-1/2 right-12 transform -translate-y-1/2 btn btn-circle btn-sm"
@@ -151,11 +154,10 @@ const MessageInput = () => {
           <Smile size={20} />
         </button>
 
-        {/* Emoji Picker */}
         {showEmojiPicker && (
           <div
             className={`absolute z-50 ${
-              window.innerWidth <= 640 // Check if the screen width is mobile size
+              window.innerWidth <= 640
                 ? "bottom-0 left-0 w-full h-[40vh] overflow-y-scroll bg-white shadow-lg rounded-t-lg"
                 : "bottom-14 right-1"
             }`}

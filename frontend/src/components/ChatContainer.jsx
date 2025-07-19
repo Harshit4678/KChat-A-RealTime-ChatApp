@@ -5,8 +5,8 @@ import MessageInput from "./MessageInput.jsx";
 import MessageSkeleton from "./skeletons/MessageSkeleton.jsx";
 import { useAuthStore } from "../store/useAuthStore.js";
 import { formatMessageTime } from "../lib/utils.js";
+import { decryptMessage } from "../lib/encryption.js"; // <-- Correct import
 
-// This component displays the chat messages and handles the chat UI.
 const ChatContainer = () => {
   const {
     messages,
@@ -19,12 +19,12 @@ const ChatContainer = () => {
   const { authUser } = useAuthStore();
   const [showLiveIndicator, setShowLiveIndicator] = useState(false);
   const messageEndRef = useRef();
+  const secretKey = "shared-key-for-this-chat"; // Replace with per-chat key in production
 
   useEffect(() => {
     const handler = () => {
-      console.log("show-live-indicator event received");
       setShowLiveIndicator(true);
-      setTimeout(() => setShowLiveIndicator(false), 1500); // 1.5 seconds
+      setTimeout(() => setShowLiveIndicator(false), 1500);
     };
     window.addEventListener("show-live-indicator", handler);
     return () => window.removeEventListener("show-live-indicator", handler);
@@ -33,7 +33,6 @@ const ChatContainer = () => {
   useEffect(() => {
     getMessages(selectedUser._id);
     subscribeToMessages();
-
     return () => unsubscribeFromMessages();
   }, [
     selectedUser._id,
@@ -47,6 +46,13 @@ const ChatContainer = () => {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  // Decrypt all messages before rendering
+  const decryptedMessages = messages.map((message) => ({
+    ...message,
+    text: message.text ? decryptMessage(message.text, secretKey) : "",
+    image: message.image ? decryptMessage(message.image, secretKey) : null,
+  }));
 
   if (isMessagesLoading) {
     return (
@@ -63,8 +69,7 @@ const ChatContainer = () => {
       <div className="sticky top-0 z-10 bg-base-100 opacity-90 border-b border-base-300">
         <ChatHeader />
       </div>
-      <div className="flex-1  flex flex-col overflow-auto">
-        {/* Live indicator for new message */}
+      <div className="flex-1 flex flex-col overflow-auto">
         {showLiveIndicator && (
           <div className="flex justify-center mb-2">
             <span className="px-3 py-1 bg-blue-500 text-white rounded-full text-xs animate-pulse transition-all duration-300">
@@ -73,7 +78,7 @@ const ChatContainer = () => {
           </div>
         )}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message) => (
+          {decryptedMessages.map((message) => (
             <div
               key={message._id}
               className={`chat ${
@@ -93,7 +98,6 @@ const ChatContainer = () => {
                   />
                 </div>
               </div>
-
               <div className="chat-header mb-1">
                 <time className="text-xs opacity-50 ml-1">
                   {formatMessageTime(message.createdAt)}
@@ -108,7 +112,6 @@ const ChatContainer = () => {
                   />
                 )}
                 {message.text && <p>{message.text}</p>}
-                {/* Read receipt for messages sent by current user */}
                 {message.senderId === authUser._id && (
                   <span className="ml-auto mt-1 text-xs text-gray-400 select-none">
                     {message.seen ? "✓✓" : "✓"}

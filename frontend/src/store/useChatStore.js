@@ -105,6 +105,7 @@ export const useChatStore = create((set, get) => ({
       set({ messages: updatedMessages });
     });
   },
+  
   setSelectedUser: (selectedUser) => set({ selectedUser }),
 
   deleteChat: async (userId) => {

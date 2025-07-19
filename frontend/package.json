@@ -13,6 +13,7 @@
     "axios": "^1.8.4",
     "browser-image-compression": "^2.0.2",
     "chatting-webapp": "file:..",
+    "crypto-js": "^4.2.0",
     "daisyui": "^4.12.14",
     "emoji-picker-react": "^4.12.2",
     "lucide-react": "^0.483.0",

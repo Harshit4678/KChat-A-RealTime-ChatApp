@@ -75,22 +75,12 @@ export const sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    let imageUrl;
-    if (image) {
-      try {
-        const uploadResponse = await cloudinary.uploader.upload(image);
-        imageUrl = uploadResponse.secure_url;
-      } catch (error) {
-        console.error("Cloudinary upload error:", error.message);
-        return res.status(500).json({ message: "Image upload failed" });
-      }
-    }
-
+    // Directly save encrypted base64 image string (no Cloudinary)
     const newMessage = new Message({
       senderId,
       receiverId,
       text,
-      image: imageUrl,
+      image, // image is encrypted base64 string
     });
 
     await newMessage.save();
