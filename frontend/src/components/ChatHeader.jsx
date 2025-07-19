@@ -2,23 +2,244 @@ import { MoreVertical, Trash2, X, VideoIcon } from "lucide-react";
 import { useChatStore } from "../store/useChatStore.js";
 import { useAuthStore } from "../store/useAuthStore.js";
 import toast from "react-hot-toast";
-import { useState } from "react";
-import VideoCall from "./VideoCall.jsx";
-import { useVideoCallStore } from "../store/useVideoCallStore.js";
-import IncomingCallPopup from "./IncomingCallPopup.jsx";
+import { useEffect, useRef, useState } from "react";
+import VideoCallModal from "./VideoCallModal";
 
 const ChatHeader = () => {
   const { selectedUser, setSelectedUser, clearChat, deleteChat } =
     useChatStore();
-  const { onlineUsers } = useAuthStore();
-  const isVideoCallActive = useVideoCallStore(
-    (state) => state.isVideoCallActive
-  );
-  const setIsVideoCallActive = useVideoCallStore(
-    (state) => state.setVideoCallActive
-  );
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { onlineUsers, socket, authUser } = useAuthStore();
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [callSeconds, setCallSeconds] = useState(0);
+  const timerRef = useRef(null);
+
+  // Video call states
+  const [isCallOpen, setIsCallOpen] = useState(false);
+  const [isInCall, setIsInCall] = useState(false);
+  const [incomingCall, setIncomingCall] = useState(null); // { from, offer }
+  const [localStream, setLocalStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
+  const [isCaller, setIsCaller] = useState(false);
+  const peerConnectionRef = useRef(null);
+
+  // ICE servers for WebRTC
+  const iceServers = {
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+  };
+
+  // Cleanup function
+  const cleanupMedia = () => {
+    setLocalStream((stream) => {
+      stream?.getTracks().forEach((track) => track.stop());
+      return null;
+    });
+    setRemoteStream(null);
+    peerConnectionRef.current?.close();
+    peerConnectionRef.current = null;
+    setIsInCall(false);
+    setIsCaller(false);
+    stopTimer();
+  };
+
+  const startTimer = () => {
+    setCallSeconds(0);
+    timerRef.current = setInterval(() => {
+      setCallSeconds((prev) => prev + 1);
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+    setCallSeconds(0);
+  };
+
+  // Handle call offer
+  useEffect(() => {
+    if (!socket) return;
+
+    // Receive call offer
+    socket.on("call-offer", ({ from, offer }) => {
+      if (from === selectedUser._id) {
+        setIncomingCall({ from, offer });
+        setIsCallOpen(true);
+      }
+    });
+
+    // Receive call answer
+    socket.on("call-answer", async ({ answer }) => {
+      const pc = peerConnectionRef.current;
+      if (pc) {
+        await pc.setRemoteDescription(new window.RTCSessionDescription(answer));
+        setIsInCall(true);
+        startTimer();
+      }
+    });
+
+    // Receive ICE candidate
+    socket.on("ice-candidate", async ({ candidate }) => {
+      const pc = peerConnectionRef.current;
+      if (pc && candidate) {
+        await pc.addIceCandidate(new window.RTCIceCandidate(candidate));
+      }
+    });
+
+    // Handle call end
+    socket.on("call-ended", () => {
+      toast("Call ended");
+      setIsCallOpen(false);
+      setIncomingCall(null);
+      cleanupMedia();
+    });
+
+    // Handle call declined
+    socket.on("call-declined", () => {
+      toast("Call declined");
+      setIsCallOpen(false);
+      setIncomingCall(null);
+      cleanupMedia();
+    });
+
+    return () => {
+      socket.off("call-offer");
+      socket.off("call-answer");
+      socket.off("ice-candidate");
+      socket.off("call-ended");
+      socket.off("call-declined");
+    };
+    // eslint-disable-next-line
+  }, [socket, selectedUser]);
+
+  // Start a call
+  const startCall = async () => {
+    if (!selectedUser || !onlineUsers.includes(selectedUser._id)) {
+      toast.error("User is not online");
+      return;
+    }
+    setIsCallOpen(true);
+    setIsCaller(true);
+    setIsInCall(false);
+
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+    } catch {
+      toast.error(
+        "Could not access camera/microphone. Please check device and permissions."
+      );
+      setIsCallOpen(false);
+      setIsCaller(false);
+      return;
+    }
+    setLocalStream(stream);
+
+    const pc = new window.RTCPeerConnection(iceServers);
+    peerConnectionRef.current = pc;
+
+    pc.ontrack = (event) => {
+      setRemoteStream(event.streams[0]);
+    };
+
+    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    socket.emit("call-offer", {
+      to: selectedUser._id,
+      from: authUser._id,
+      offer,
+    });
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", {
+          to: selectedUser._id,
+          candidate: event.candidate,
+        });
+      }
+    };
+  };
+
+  // Accept incoming call
+  const acceptCall = async () => {
+    setIsInCall(true);
+    startTimer();
+    setIsCaller(false);
+
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+    } catch {
+      toast.error(
+        "Could not access camera/microphone. Please check device and permissions."
+      );
+      setIsCallOpen(false);
+      setIncomingCall(null);
+      return;
+    }
+    setLocalStream(stream);
+
+    const pc = new window.RTCPeerConnection(iceServers);
+    peerConnectionRef.current = pc;
+
+    pc.ontrack = (event) => {
+      setRemoteStream(event.streams[0]);
+    };
+
+    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+    await pc.setRemoteDescription(
+      new window.RTCSessionDescription(incomingCall.offer)
+    );
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    socket.emit("call-answer", {
+      to: incomingCall.from,
+      answer,
+    });
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", {
+          to: incomingCall.from,
+          candidate: event.candidate,
+        });
+      }
+    };
+
+    setIncomingCall(null);
+  };
+
+  // Decline incoming call
+  const declineCall = () => {
+    socket.emit("call-declined", { to: incomingCall.from });
+    setIsCallOpen(false);
+    setIncomingCall(null);
+    cleanupMedia();
+  };
+
+  // End call
+  const endCall = () => {
+    if (isCaller) {
+      socket.emit("call-ended", { to: selectedUser._id });
+    } else if (incomingCall) {
+      socket.emit("call-ended", { to: incomingCall.from });
+    }
+    setIsCallOpen(false);
+    setIncomingCall(null);
+    cleanupMedia();
+  };
+
+  // Delete chat
   const handleDeleteChat = async () => {
     if (window.confirm("Are you sure you want to delete this chat?")) {
       try {
@@ -32,6 +253,7 @@ const ChatHeader = () => {
     }
   };
 
+  // Clear chat history
   const handleClearChatHistory = async () => {
     try {
       await clearChat();
@@ -41,18 +263,6 @@ const ChatHeader = () => {
       console.error("Error clearing chat history:", error);
       toast.error("Failed to clear chat history");
     }
-  };
-
-  const startVideoCall = () => {
-    if (!onlineUsers.includes(selectedUser._id)) {
-      toast.error("User is offline. Cannot start a video call.");
-      return;
-    }
-    setIsVideoCallActive(true);
-  };
-
-  const endVideoCall = () => {
-    setIsVideoCallActive(false);
   };
 
   return (
@@ -83,11 +293,14 @@ const ChatHeader = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Video Call Button */}
           <button
-            onClick={startVideoCall}
-            className="btn btn-sm btn-circle flex items-center gap-2"
+            className="btn btn-sm btn-circle"
+            title="Video Call"
+            onClick={startCall}
+            disabled={!onlineUsers.includes(selectedUser._id)}
           >
-            <VideoIcon size={18} />
+            <VideoIcon size={20} />
           </button>
 
           <div className="relative">
@@ -136,9 +349,19 @@ const ChatHeader = () => {
           </div>
         </div>
       </div>
-
-      {isVideoCallActive && <VideoCall onEndCall={endVideoCall} />}
-      <IncomingCallPopup />
+      {/* Video Call Modal */}
+      <VideoCallModal
+        isOpen={isCallOpen}
+        incomingCall={incomingCall}
+        onAccept={acceptCall}
+        onDecline={declineCall}
+        onEndCall={endCall}
+        localStream={localStream}
+        remoteStream={remoteStream}
+        isInCall={isInCall}
+        isCaller={isCaller}
+        callSeconds={callSeconds}
+      />
     </div>
   );
 };

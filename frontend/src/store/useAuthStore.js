@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { axiosIntance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-import { useVideoCallStore } from "./useVideoCallStore.js";
 
 const BASE_URL =
   import.meta.env.MODE === "development" ? "http://localhost:3000" : "/";
@@ -84,30 +83,6 @@ export const useAuthStore = create((set, get) => ({
 
     socket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
-    });
-
-    // ✅ Important: incoming-call listener for receiver
-    socket.on("incoming-call", ({ from, offer, senderSocketId }) => {
-      const { socket } = get();
-      const { setIncomingCall, setVideoCallActive } =
-        useVideoCallStore.getState();
-
-      if (socket.id === senderSocketId) return; // ignore own call
-
-      setIncomingCall({ from, offer });
-      setVideoCallActive(true);
-    });
-
-    socket.on("call-error", ({ message }) => {
-      toast.error(message);
-    });
-
-    socket.on("call-ended", () => {
-      const { setInCall, setVideoCallActive, setIncomingCall } =
-        useVideoCallStore.getState();
-      setInCall(false);
-      setVideoCallActive(false);
-      setIncomingCall(null);
     });
   },
 

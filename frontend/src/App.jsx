@@ -10,11 +10,14 @@ import SettingsPage from "./pages/SettingsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import { Loader } from "lucide-react";
 import { Toaster } from "react-hot-toast";
-import IncomingCallPopup from "./components/IncomingCallPopup.jsx";
+import { useChatStore } from "./store/useChatStore";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
-  const { theme } = useThemeStore(); // Get the current theme from the store
+  const { theme } = useThemeStore();
+  const initializeSidebarSocket = useChatStore(
+    (s) => s.initializeSidebarSocket
+  );
 
   console.log({ onlineUsers });
 
@@ -26,6 +29,11 @@ const App = () => {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
+
+  // Initialize sidebar socket for real-time updates
+  useEffect(() => {
+    initializeSidebarSocket();
+  }, [initializeSidebarSocket]);
 
   if (isCheckingAuth && !authUser)
     return (

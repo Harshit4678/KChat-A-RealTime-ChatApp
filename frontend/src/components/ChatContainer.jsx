@@ -1,12 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore.js";
 import ChatHeader from "./ChatHeader.jsx";
 import MessageInput from "./MessageInput.jsx";
 import MessageSkeleton from "./skeletons/MessageSkeleton.jsx";
 import { useAuthStore } from "../store/useAuthStore.js";
 import { formatMessageTime } from "../lib/utils.js";
+import { decryptMessage } from "../lib/encryption.js"; // <-- Correct import
 
-// This component displays the chat messages and handles the chat UI.
 const ChatContainer = () => {
   const {
     messages,
@@ -17,12 +17,22 @@ const ChatContainer = () => {
     unsubscribeFromMessages,
   } = useChatStore();
   const { authUser } = useAuthStore();
+  const [showLiveIndicator, setShowLiveIndicator] = useState(false);
   const messageEndRef = useRef();
+  const secretKey = "shared-key-for-this-chat"; // Replace with per-chat key in production
+
+  useEffect(() => {
+    const handler = () => {
+      setShowLiveIndicator(true);
+      setTimeout(() => setShowLiveIndicator(false), 1500);
+    };
+    window.addEventListener("show-live-indicator", handler);
+    return () => window.removeEventListener("show-live-indicator", handler);
+  }, []);
 
   useEffect(() => {
     getMessages(selectedUser._id);
     subscribeToMessages();
-
     return () => unsubscribeFromMessages();
   }, [
     selectedUser._id,
@@ -36,6 +46,13 @@ const ChatContainer = () => {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  // Decrypt all messages before rendering
+  const decryptedMessages = messages.map((message) => ({
+    ...message,
+    text: message.text ? decryptMessage(message.text, secretKey) : "",
+    image: message.image ? decryptMessage(message.image, secretKey) : null,
+  }));
 
   if (isMessagesLoading) {
     return (
@@ -52,9 +69,16 @@ const ChatContainer = () => {
       <div className="sticky top-0 z-10 bg-base-100 opacity-90 border-b border-base-300">
         <ChatHeader />
       </div>
-      <div className="flex-1  flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col overflow-auto">
+        {showLiveIndicator && (
+          <div className="flex justify-center mb-2">
+            <span className="px-3 py-1 bg-blue-500 text-white rounded-full text-xs animate-pulse transition-all duration-300">
+              New Message
+            </span>
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message) => (
+          {decryptedMessages.map((message) => (
             <div
               key={message._id}
               className={`chat ${
@@ -74,13 +98,12 @@ const ChatContainer = () => {
                   />
                 </div>
               </div>
-
               <div className="chat-header mb-1">
                 <time className="text-xs opacity-50 ml-1">
                   {formatMessageTime(message.createdAt)}
                 </time>
               </div>
-              <div className="chat-bubble flex flex-col">
+              <div className="chat-bubble flex flex-col transition-all duration-300 ease-in animate-fade-in">
                 {message.image && (
                   <img
                     src={message.image}
@@ -89,6 +112,11 @@ const ChatContainer = () => {
                   />
                 )}
                 {message.text && <p>{message.text}</p>}
+                {message.senderId === authUser._id && (
+                  <span className="ml-auto mt-1 text-xs text-gray-400 select-none">
+                    {message.seen ? "✓✓" : "✓"}
+                  </span>
+                )}
               </div>
             </div>
           ))}
