@@ -11,9 +11,11 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 import { Loader } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import { useChatStore } from "./store/useChatStore";
+import BanMessageModal from "./components/BanMessageModal.jsx";
 
 const App = () => {
-  const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
+  const { authUser, checkAuth, isCheckingAuth, onlineUsers, banInfo, logout } =
+    useAuthStore();
   const { theme } = useThemeStore();
   const initializeSidebarSocket = useChatStore(
     (s) => s.initializeSidebarSocket
@@ -70,6 +72,14 @@ const App = () => {
       </Routes>
 
       <Toaster />
+
+      {banInfo && (
+        <BanMessageModal
+          message={banInfo.message}
+          adminEmail={banInfo.adminEmail}
+          onLogout={logout}
+        />
+      )}
     </div>
   );
 };

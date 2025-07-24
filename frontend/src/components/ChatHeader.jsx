@@ -1,9 +1,10 @@
-import { MoreVertical, Trash2, X, VideoIcon } from "lucide-react";
+import { MoreVertical, Trash2, X, VideoIcon, Flag } from "lucide-react";
 import { useChatStore } from "../store/useChatStore.js";
 import { useAuthStore } from "../store/useAuthStore.js";
 import toast from "react-hot-toast";
 import { useEffect, useRef, useState } from "react";
 import VideoCallModal from "./VideoCallModal";
+import ReportModal from "./ReportModal";
 
 const ChatHeader = () => {
   const { selectedUser, setSelectedUser, clearChat, deleteChat } =
@@ -21,6 +22,7 @@ const ChatHeader = () => {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [isCaller, setIsCaller] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const peerConnectionRef = useRef(null);
 
   // ICE servers for WebRTC
@@ -289,7 +291,22 @@ const ChatHeader = () => {
             >
               {onlineUsers.includes(selectedUser._id) ? "Online" : "Offline"}
             </p>
-          </div>
+          </div>{" "}
+          {/* Report User Button */}
+          <button
+            onClick={() => setReportOpen(true)}
+            className="btn btn-xs btn-error ml-4 flex items-center"
+            title="Report User"
+          >
+            <Flag size={16} />
+            <span className="ml-1 hidden sm:inline">Report User</span>
+          </button>
+          <ReportModal
+            isOpen={reportOpen}
+            onClose={() => setReportOpen(false)}
+            type="user"
+            targetId={selectedUser._id}
+          />
         </div>
 
         <div className="flex items-center gap-2">

@@ -15,17 +15,29 @@ export const useAuthStore = create((set, get) => ({
   isCheckingAuth: true,
   onlineUsers: [],
   socket: null,
+  banInfo: null,
 
   checkAuth: async () => {
     try {
       const res = await axiosIntance.get("/auth/check");
-      set({ authUser: res.data });
-      get().connectSocket(); // connect after auth
-    } catch {
-      if (get().authUser) {
-        toast.error("Session expired. Please log in again.");
+      set({ authUser: res.data, banInfo: null });
+      get().connectSocket();
+    } catch (error) {
+      const res = error.response;
+      if (res && res.status === 403 && res.data?.message) {
+        set({
+          banInfo: {
+            message: res.data.message,
+            adminEmail: res.data.adminEmail || "admin@example.com",
+          },
+          authUser: null,
+        });
+      } else {
+        if (get().authUser) {
+          toast.error("Session expired. Please log in again.");
+        }
+        set({ authUser: null, banInfo: null });
       }
-      set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -49,11 +61,21 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosIntance.post("/auth/login", data);
-      set({ authUser: res.data });
+      set({ authUser: res.data, banInfo: null });
       toast.success("Logged in successfully");
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      const res = error.response;
+      if (res && res.status === 403 && res.data?.message) {
+        set({
+          banInfo: {
+            message: res.data.message,
+            adminEmail: res.data.adminEmail || "admin@example.com",
+          },
+        });
+      } else {
+        toast.error(error.response?.data?.message || "Login failed");
+      }
     } finally {
       set({ isLoggingIn: false });
     }
@@ -62,7 +84,7 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await axiosIntance.post("/auth/logout");
-      set({ authUser: null });
+      set({ authUser: null, banInfo: null });
       toast.success("Logged out successfully");
       get().disconnectSocket();
     } catch (error) {

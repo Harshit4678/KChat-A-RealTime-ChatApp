@@ -58,6 +58,14 @@ export const login = async (req, res) => {
         .json({ message: "Invalid email or Not registered !" });
     }
 
+    if (user.isBanned) {
+      return res.status(403).json({
+        message:
+          "You are banned by admin for abusing or some suspicious activity. Appeal karo aur admin ko contact kro.",
+        adminEmail: "admin@example.com",
+      });
+    }
+
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(400).json({ message: "Invalid password !" });
@@ -130,7 +138,18 @@ export const updateProfile = async (req, res) => {
 
 export const checkAuth = async (req, res) => {
   try {
-    res.status(200).json(req.user);
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    if (user.isBanned) {
+      return res.status(403).json({
+        message:
+          "You are banned by admin for some kind of suspicious activity or for abusing.",
+        adminEmail: "admin@example.com",
+      });
+    }
+
+    res.status(200).json(user);
   } catch (error) {
     console.log("Error in checkAuth controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });

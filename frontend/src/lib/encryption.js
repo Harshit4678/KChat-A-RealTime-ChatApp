@@ -1,4 +1,4 @@
-// utils/encryption.js
+// libs/encryption.js
 import CryptoJS from "crypto-js";
 
 export function encryptMessage(message, key) {
