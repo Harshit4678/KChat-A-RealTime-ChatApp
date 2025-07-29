@@ -1,6 +1,6 @@
 // DashboardHome.jsx
 import { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../api/auth";
 import GlassStatCard from "../components/GlassStatCard";
 import LineChart from "../components/LineChart";
 import { Doughnut } from "react-chartjs-2";
@@ -21,13 +21,7 @@ export default function DashboardHome() {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem("adminToken");
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/stats`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
+      const res = await API.get("/stats");
       setStats(res.data);
     } catch (err) {
       console.error("Failed to fetch stats", err);

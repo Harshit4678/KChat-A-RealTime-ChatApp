@@ -2,6 +2,7 @@ import axios from "axios";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true,
 });
 
 // Send token if required in other APIs
@@ -10,6 +11,8 @@ API.interceptors.request.use((req) => {
   if (token) req.headers.Authorization = `Bearer ${token}`;
   return req;
 });
+
+export default API;
 
 export const loginAdmin = async (email, password) => {
   const res = await API.post("/login", { email, password });

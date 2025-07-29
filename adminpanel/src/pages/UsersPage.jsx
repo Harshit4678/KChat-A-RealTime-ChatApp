@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../api/auth";
 import toast from "react-hot-toast";
 import { Grid2X2, List, Ban, UserCheck, Search } from "lucide-react";
 import { motion as Motion } from "framer-motion";
@@ -14,12 +14,7 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/users`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-        withCredentials: true,
-      });
+      const res = await API.get("/users");
       setUsers(res.data);
     } catch (err) {
       console.error("Error fetching users", err);
@@ -29,16 +24,7 @@ export default function UsersPage() {
 
   const toggleBan = async (userId) => {
     try {
-      const res = await axios.patch(
-        `${import.meta.env.VITE_API_URL}/users/${userId}/ban`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await API.patch(`/users/${userId}/ban`);
       toast.success(
         `User is now ${res.data.user.isBanned ? "banned" : "unbanned"}`
       );
@@ -48,7 +34,6 @@ export default function UsersPage() {
       toast.error("Failed to update user");
     }
   };
-
   useEffect(() => {
     fetchUsers();
   }, []);

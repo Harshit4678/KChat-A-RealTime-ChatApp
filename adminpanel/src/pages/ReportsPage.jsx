@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+
+import API from "../api/auth";
 import toast from "react-hot-toast";
 import io from "socket.io-client";
 import { decryptMessage } from "../utils/encryption";
@@ -8,7 +9,7 @@ import { FaEye, FaTrash, FaSort, FaThList, FaThLarge } from "react-icons/fa";
 import { MdOutlineFilterAlt } from "react-icons/md";
 
 const statusOptions = ["pending", "reviewed", "dismissed", "action_taken"];
-const SOCKET_URL = `${import.meta.env.VITE_API_URL}`;
+const SOCKET_URL = import.meta.env.VITE_API_URL.replace("/api/admin", "");
 const getChatSecretKey = () => "shared-key-for-this-chat";
 
 const ITEMS_PER_PAGE = 6;
@@ -28,11 +29,7 @@ export default function ReportsPage() {
 
   const fetchReports = async () => {
     try {
-      const token = localStorage.getItem("adminToken");
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/reports`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
-      });
+      const res = await API.get("/reports");
       setReports(res.data);
     } catch (err) {
       console.error("Error fetching reports", err);
@@ -89,16 +86,10 @@ export default function ReportsPage() {
   const handleStatusUpdate = async (reportId, newStatus) => {
     const adminNote = prompt("Enter admin note (optional):") || "";
     try {
-      await axios.patch(
-        `${import.meta.env.VITE_API_URL}/reports/${reportId}/status`,
-        { status: newStatus, adminNote },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-          },
-          withCredentials: true,
-        }
-      );
+      await API.patch(`/reports/${reportId}/status`, {
+        status: newStatus,
+        adminNote,
+      });
       toast.success("Status updated");
       fetchReports();
     } catch (err) {
@@ -110,15 +101,7 @@ export default function ReportsPage() {
   const handleDelete = async (reportId) => {
     if (!confirm("Are you sure you want to delete this report?")) return;
     try {
-      await axios.delete(
-        `${import.meta.env.VITE_API_URL}/reports/${reportId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-          },
-          withCredentials: true,
-        }
-      );
+      await API.delete(`/reports/${reportId}`);
       toast.success("Report deleted");
       fetchReports();
     } catch (err) {
@@ -129,15 +112,8 @@ export default function ReportsPage() {
 
   const handleViewLastMessages = async (report) => {
     try {
-      const token = localStorage.getItem("adminToken");
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/users/${
-          report.reportedUser._id
-        }/last-messages?reporterId=${report.reportedBy._id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        }
+      const res = await API.get(
+        `/users/${report.reportedUser._id}/last-messages?reporterId=${report.reportedBy._id}`
       );
       const secretKey = getChatSecretKey();
       const decryptedMsgs = res.data.map((msg) => ({
