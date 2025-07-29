@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { axiosIntance } from "../lib/axios.js";
 import { useAuthStore } from "../store/useAuthStore.js";
 import {
   Eye,
@@ -9,19 +10,24 @@ import {
   MessageSquare,
   User,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthImagePattern from "../components/AuthImagePattern.jsx";
 import toast from "react-hot-toast";
 
 const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [showOtpScreen, setShowOtpScreen] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpMsg, setOtpMsg] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
   });
-
-  const { signup, isSigningUp } = useAuthStore();
+  const navigate = useNavigate();
+  const { isSigningUp, setAuthUser } = useAuthStore();
 
   const validateForm = () => {
     if (!formData.fullName.trim()) return toast.error("Full name is required");
@@ -36,19 +42,107 @@ const SignUpPage = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const isValid = validateForm();
-
     if (isValid) {
       try {
-        await signup(formData);
-        toast.success("Account created successfully!");
+        const res = await axiosIntance.post("/auth/signup", formData);
+        toast.success(res.data.message || "Account created successfully!");
+        setOtpEmail(formData.email);
+        setShowOtpScreen(true);
+        setResendTimer(30);
+        // Start timer for resend button
+        const timer = setInterval(() => {
+          setResendTimer((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
       } catch (error) {
-        toast.error(error.message || "Failed to create account");
+        toast.error(
+          error.response?.data?.message || "Failed to create account"
+        );
       }
     }
   };
+  const handleVerifyOtp = async () => {
+    try {
+      const res = await axiosIntance.post("/auth/verify-email", {
+        email: otpEmail,
+        otp,
+      });
+      setOtpMsg(res.data.message);
+      toast.success("Email verified! Redirecting...");
+      // Get user profile from backend
+      const userRes = await axiosIntance.post("/auth/login", {
+        email: otpEmail,
+        password: formData.password,
+      });
+      setAuthUser(userRes.data); // Set user in store
+      navigate("/"); // Redirect to home
+    } catch (err) {
+      setOtpMsg(err.response?.data?.message || "Invalid OTP");
+    }
+  };
+  const handleResendOtp = async () => {
+    try {
+      await axiosIntance.post("/auth/resend-otp", { email: otpEmail });
+      toast.success("OTP resent to your email.");
+      setResendTimer(30);
+      // Start timer again
+      const timer = setInterval(() => {
+        setResendTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to resend OTP");
+    }
+  };
 
+  // OTP screen logic START
+  if (showOtpScreen) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-bold mb-4">Verify Your Email</h2>
+        <p className="mb-2">
+          Email: <b>{otpEmail}</b>
+        </p>
+        <input
+          type="text"
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          placeholder="Enter OTP"
+          className="input input-bordered w-full max-w-xs mb-2"
+        />
+        <button
+          className="btn btn-primary w-full max-w-xs mb-2"
+          onClick={handleVerifyOtp}
+        >
+          Verify OTP
+        </button>
+        <button
+          className="btn btn-secondary w-full max-w-xs"
+          onClick={handleResendOtp}
+          disabled={resendTimer > 0}
+        >
+          Resend OTP {resendTimer > 0 ? `(${resendTimer}s)` : ""}
+        </button>
+        <p className="mt-2">{otpMsg}</p>
+        <p className="mt-2 text-sm text-gray-500">
+          Or check your email for the verification link.
+        </p>
+      </div>
+    );
+  }
+  // OTP screen logic END
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* left side*/}
@@ -83,11 +177,14 @@ const SignUpPage = () => {
                 <input
                   type="text"
                   className={`input input-bordered w-full pl-12`}
-                  placeholder="John Doe"
+                  placeholder="Full Name"
                   value={formData.fullName}
                   maxLength={20}
                   onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
+                    setFormData({
+                      ...formData,
+                      fullName: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -107,7 +204,10 @@ const SignUpPage = () => {
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
+                    setFormData({
+                      ...formData,
+                      email: e.target.value.toLowerCase(),
+                    })
                   }
                 />
               </div>

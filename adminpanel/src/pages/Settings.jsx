@@ -1,60 +1,60 @@
-import { useState } from "react";
+import { motion as Motion } from "framer-motion";
 
 export default function Settings() {
-  const [name, setName] = useState("Admin User");
-  const [email, setEmail] = useState("admin@example.com");
-  const [password, setPassword] = useState("");
-
-  const handleUpdate = (e) => {
-    e.preventDefault();
-    alert("🔧 Settings updated (not yet connected to backend)");
-  };
-
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">⚙️ Admin Settings</h2>
-
-      <form
-        onSubmit={handleUpdate}
-        className="space-y-6 bg-white p-6 rounded shadow"
+    <div className="p-6 max-w-3xl mx-auto">
+      <Motion.h2
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-3xl font-extrabold text-gray-800 mb-8 flex items-center gap-2"
       >
-        <div>
-          <label className="block font-semibold mb-1">Name</label>
-          <input
-            className="w-full border p-2 rounded"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
+        ⚙️ Admin Panel Settings
+      </Motion.h2>
 
-        <div>
-          <label className="block font-semibold mb-1">Email</label>
-          <input
-            className="w-full border p-2 rounded"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+      <Motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 shadow-md"
+      >
+        <section className="mb-6">
+          <h3 className="text-xl font-semibold mb-3 text-gray-700">
+            👤 Profile Info
+          </h3>
+          <ul className="text-gray-600 space-y-2">
+            <li>
+              <strong>Name:</strong> Admin User
+            </li>
+            <li>
+              <strong>Email:</strong> admin@example.com
+            </li>
+            <li>
+              <strong>Role:</strong> Super Admin
+            </li>
+          </ul>
+        </section>
 
-        <div>
-          <label className="block font-semibold mb-1">New Password</label>
-          <input
-            className="w-full border p-2 rounded"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Leave blank to keep current"
-          />
-        </div>
+        <section className="mb-6">
+          <h3 className="text-xl font-semibold mb-3 text-gray-700">
+            🛡️ Security
+          </h3>
+          <p className="text-gray-600">
+            Your password is securely stored and cannot be changed via the
+            panel. Please contact support for changes.
+          </p>
+        </section>
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Save Changes
-        </button>
-      </form>
+        <section>
+          <h3 className="text-xl font-semibold mb-3 text-gray-700">
+            ⚡ Activity Preferences
+          </h3>
+          <ul className="text-gray-600 list-disc list-inside space-y-1">
+            <li>Receive weekly usage reports</li>
+            <li>Enable login alerts</li>
+            <li>Theme: Dark Mode</li>
+          </ul>
+        </section>
+      </Motion.div>
     </div>
   );
 }

@@ -53,7 +53,10 @@ const LoginPage = () => {
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
+                    setFormData({
+                      ...formData,
+                      email: e.target.value.toLowerCase(),
+                    })
                   }
                 />
               </div>
@@ -108,6 +111,10 @@ const LoginPage = () => {
 
           <div className="text-center">
             <p className="text-base-container/60">
+              <Link to="/forgot-password" className="link link-primary">
+                Forgot Password?
+              </Link>
+              <br />
               Don't have an account?{" "}
               <Link to="/signup" className="link link-primary">
                 Create new account !

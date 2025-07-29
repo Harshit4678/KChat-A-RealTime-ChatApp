@@ -3,73 +3,150 @@ import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import Message from "../models/message.model.js";
+import crypto from "crypto";
+import { sendEmail } from "../lib/sendEmail.js";
+import validator from "validator";
 
 export const signup = async (req, res) => {
-  const { fullName, email, password } = req.body;
   try {
+    const { fullName, email, password } = req.body;
     if (!fullName || !email || !password)
-      return res.status(400).json({ message: "All the fields are required" });
-    if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters" });
-    }
+      return res.status(400).json({ message: "All fields are required" });
 
-    const user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: "user already exists" });
+    // Email format check
+    if (!validator.isEmail(email))
+      return res.status(400).json({ message: "Invalid email format" });
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Block disposable emails (basic)
+    if (email.endsWith("@tempmail.com") || email.endsWith("@mailinator.com"))
+      return res.status(400).json({ message: "Disposable emails not allowed" });
 
-    const newUser = new User({
-      fullName: fullName,
-      email: email,
+    const userExists = await User.findOne({ email: email.toLowerCase() });
+    if (userExists)
+      return res.status(400).json({ message: "User already exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = Date.now() + 1000 * 60 * 10; // 10 min
+
+    // Generate verification token for link
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = Date.now() + 1000 * 60 * 10; // 10 min
+
+    const user = await User.create({
+      fullName,
+      email: email.toLowerCase(),
       password: hashedPassword,
+      isVerified: false,
+      verificationToken,
+      verificationTokenExpiry,
+      otp,
+      otpExpiry,
     });
 
-    if (newUser) {
-      // generate jwt token
+    // Send verification email (OTP + link)
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}&email=${user.email}`;
+    await sendEmail(
+      user.email,
+      "Verify your email",
+      `<p>Your OTP is <b>${otp}</b></p>
+      <p>Or click <a href="${verifyUrl}">here</a> to verify your email. This link and OTP will expire in 10 minutes.</p>`
+    );
 
-      generateToken(newUser._id, res);
-      await newUser.save();
-
-      res.status(201).json({
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        profilePic: newUser.profilePic,
-      });
-    } else {
-      res.status(400).json({ message: "Invalid user data" });
-    }
+    res.status(201).json({
+      message: "Verification email sent. Please check your inbox.",
+      email: user.email,
+    });
   } catch (error) {
-    console.log("Error in signup controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const { email, token, otp } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user || user.isVerified)
+      return res.status(400).json({ message: "Invalid or already verified" });
+
+    // OTP verify
+    if (otp) {
+      if (user.otp !== otp || user.otpExpiry < Date.now()) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+    }
+    // Link verify
+    else if (token) {
+      if (
+        user.verificationToken !== token ||
+        user.verificationTokenExpiry < Date.now()
+      ) {
+        return res.status(400).json({ message: "Invalid or expired link" });
+      }
+    } else {
+      return res.status(400).json({ message: "OTP or link required" });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiry = undefined;
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+export const resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || user.isVerified)
+      return res.status(400).json({ message: "Invalid request" });
+
+    // Generate new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 1000 * 60 * 10;
+    await user.save();
+
+    await sendEmail(
+      user.email,
+      "Your new OTP",
+      `<p>Your new OTP is <b>${otp}</b></p>`
+    );
+
+    res.status(200).json({ message: "OTP resent to your email" });
+  } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 export const login = async (req, res) => {
-  const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const { email, password } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase() });
 
-    if (!user) {
+    if (!user)
       return res
         .status(404)
-        .json({ message: "Invalid email or Not registered !" });
-    }
+        .json({ message: "Invalid email or not registered!" });
 
-    if (user.isBanned) {
-      return res.status(403).json({
-        message:
-          "You are banned by admin for abusing or some suspicious activity. Appeal karo aur admin ko contact kro.",
-        adminEmail: "admin@example.com",
-      });
-    }
+    if (!user.isVerified)
+      return res
+        .status(403)
+        .json({ message: "Please verify your email before logging in." });
+
+    if (user.isBanned)
+      return res.status(403).json({ message: "You are banned by admin." });
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
-    if (!isPasswordCorrect) {
-      return res.status(400).json({ message: "Invalid password !" });
-    }
+    if (!isPasswordCorrect)
+      return res.status(400).json({ message: "Invalid password!" });
 
     generateToken(user._id, res);
 
@@ -80,7 +157,69 @@ export const login = async (req, res) => {
       profilePic: user.profilePic,
     });
   } catch (error) {
-    console.log("Error in login controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 1000 * 60 * 10;
+    await user.save();
+
+    await sendEmail(
+      user.email,
+      "Your OTP for password reset",
+      `<p>Your OTP is <b>${otp}</b>. It will expire in 10 minutes.</p>`
+    );
+
+    res.status(200).json({ message: "OTP sent to your email" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+export const verifyOtpForReset = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || user.otp !== otp || user.otpExpiry < Date.now())
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    res.status(200).json({ message: "OTP verified" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const resetPasswordWithOtp = async (req, res) => {
+  try {
+    const { email, otp, newPassword, confirmPassword } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user || user.otp !== otp || user.otpExpiry < Date.now())
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    if (!newPassword || newPassword.length < 6)
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
+
+    if (newPassword !== confirmPassword)
+      return res.status(400).json({ message: "Passwords do not match" });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

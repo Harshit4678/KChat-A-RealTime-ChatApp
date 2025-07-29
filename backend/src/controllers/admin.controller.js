@@ -143,14 +143,72 @@ export const getAllMessages = async (req, res) => {
   }
 };
 
-// DASHBOARD STATS
+// Dashboard Stats with trend data
 export const getDashboardStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const pendingReports = await Report.countDocuments({ status: "pending" });
     const blockedUsers = await User.countDocuments({ isBanned: true });
-    res.status(200).json({ totalUsers, pendingReports, blockedUsers });
+    const reviewedReports = await Report.countDocuments({ status: "reviewed" });
+    const dismissedReports = await Report.countDocuments({
+      status: "dismissed",
+    });
+
+    const userSignupTrend = await User.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const reportTrend = await Report.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const recentUsers = await User.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select("fullName email createdAt");
+
+    res.status(200).json({
+      totalUsers,
+      pendingReports,
+      blockedUsers,
+      reviewedReports,
+      dismissedReports,
+      signupTrend: userSignupTrend,
+      reportTrend,
+      recentUsers,
+    });
   } catch (err) {
+    console.error("Failed to fetch dashboard stats:", err);
     res.status(500).json({ message: "Failed to fetch stats" });
   }
 };
@@ -158,15 +216,130 @@ export const getDashboardStats = async (req, res) => {
 export const getLastMessagesOfUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const limit = parseInt(req.query.limit) || 5;
-    // Find last N messages sent by this user (as sender)
-    const messages = await Message.find({ senderId: userId })
+    const { reporterId } = req.query;
+    const limit = 5;
+
+    // 5 messages sent by reported user to reporter
+    const sentByReported = await Message.find({
+      senderId: userId,
+      receiverId: reporterId,
+    })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .select("text image createdAt")
+      .populate("senderId", "fullName")
       .lean();
-    res.json(messages);
+
+    // 5 messages sent by reporter to reported user
+    const sentByReporter = await Message.find({
+      senderId: reporterId,
+      receiverId: userId,
+    })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate("senderId", "fullName")
+      .lean();
+
+    const last10 = [...sentByReported, ...sentByReporter]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10);
+
+    res.json(last10);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch messages" });
+  }
+};
+
+export const getAdminProfile = async (req, res) => {
+  try {
+    // req.admin verifyAdmin middleware se aata hai
+    const admin = await Admin.findById(req.admin.id).select("email fullName");
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+    res.json({ admin });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch admin profile" });
+  }
+};
+
+export const updateAdmin = async (req, res) => {
+  const { id } = req.params;
+  const { fullName, email, password } = req.body;
+
+  try {
+    const admin = await Admin.findById(id);
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    admin.fullName = fullName || admin.fullName;
+    admin.email = email || admin.email;
+
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      admin.password = await bcrypt.hash(password, salt);
+    }
+
+    await admin.save();
+
+    res.status(200).json({ message: "Admin updated", admin });
+  } catch (error) {
+    res.status(500).json({ message: "Update failed", error: error.message });
+  }
+};
+
+export const getAnalytics = async (req, res) => {
+  try {
+    const today = new Date();
+    const pastWeek = new Date(today);
+    pastWeek.setDate(today.getDate() - 6);
+
+    // User Signups (past 7 days)
+    const userStats = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: pastWeek },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%a", date: "$createdAt" }, // e.g., "Mon"
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const orderedDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const userData = orderedDays.map((day) => {
+      const stat = userStats.find((d) => d._id === day);
+      return { date: day, count: stat?.count || 0 };
+    });
+
+    // Report Status
+    const statusCounts = await Report.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          value: { $sum: 1 },
+        },
+      },
+    ]);
+
+    console.log("Status Counts:", statusCounts);
+
+    const reportData = [
+      { name: "Pending", value: 0 },
+      { name: "Reviewed", value: 0 },
+      { name: "Action Taken", value: 0 },
+      { name: "Dismissed", value: 0 },
+    ];
+
+    statusCounts.forEach((item) => {
+      const index = reportData.findIndex((r) => r.name === item._id);
+      if (index !== -1) reportData[index].value = item.value;
+    });
+
+    res.json({ userStats: userData, reportStats: reportData });
+  } catch (err) {
+    console.error("Analytics error:", err);
+    res.status(500).json({ message: "Server error in analytics" });
   }
 };

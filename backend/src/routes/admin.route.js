@@ -1,6 +1,7 @@
 import express from "express";
 import {
   adminLogin,
+  getAdminProfile,
   getAllReports,
   updateReportStatus,
   deleteReport,
@@ -9,6 +10,8 @@ import {
   getAllMessages,
   toggleUserBan,
   getLastMessagesOfUser,
+  updateAdmin,
+  getAnalytics,
 } from "../controllers/admin.controller.js";
 import { verifyAdmin } from "../middleware/verifyAdmin.js";
 
@@ -16,6 +19,8 @@ const router = express.Router();
 
 // Public Admin Route
 router.post("/login", adminLogin);
+router.get("/me", verifyAdmin, getAdminProfile);
+router.put("/update/:id", updateAdmin);
 
 // Reports
 router.get("/reports", verifyAdmin, getAllReports);
@@ -32,5 +37,7 @@ router.get("/messages", verifyAdmin, getAllMessages);
 
 // Dashboard stats
 router.get("/stats", verifyAdmin, getDashboardStats);
+
+router.get("/analytics", getAnalytics);
 
 export default router;

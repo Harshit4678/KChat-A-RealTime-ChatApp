@@ -12,6 +12,9 @@ import { Loader } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import { useChatStore } from "./store/useChatStore";
 import BanMessageModal from "./components/BanMessageModal.jsx";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx"; // nayi file
+
+import VerifyEmailPage from "./pages/VerifyEmailPage.jsx";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers, banInfo, logout } =
@@ -69,6 +72,10 @@ const App = () => {
           path="/profile"
           element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
         />
+
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
       </Routes>
 
       <Toaster />

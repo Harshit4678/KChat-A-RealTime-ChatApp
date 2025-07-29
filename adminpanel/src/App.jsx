@@ -13,13 +13,30 @@ import Logs from "./pages/Logs";
 import Notifications from "./pages/Notifications";
 
 import { Toaster } from "react-hot-toast";
+import { useEffect } from "react";
+import { useAdminStore } from "./store/useAdminStore";
+import axios from "axios";
 
 export default function App() {
+  const setAdmin = useAdminStore((s) => s.setAdmin);
+
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (token) {
+      axios
+        .get(`${import.meta.env.VITE_API_URL}/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        })
+        .then((res) => setAdmin(res.data.admin))
+        .catch(() => setAdmin(null));
+    }
+  }, [setAdmin]);
   return (
     <BrowserRouter>
       <Toaster />
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
         <Route
           path="/dashboard"
           element={

@@ -17,5 +17,8 @@
     "url": "https://github.com/Harshit4678/Chatty-A-RealTime-ChatApp/issues"
   },
   "homepage": "https://github.com/Harshit4678/Chatty-A-RealTime-ChatApp#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "crypto-js": "^4.2.0"
+  }
 }

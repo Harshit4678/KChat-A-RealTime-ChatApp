@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuthStore } from "../store/useAuthStore";
-import { decryptMessage } from "../lib/encryption";
+import { decryptMessage } from "../lib/encryption.js";
 import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
 

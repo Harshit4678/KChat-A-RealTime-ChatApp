@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
     },
     fullName: {
       type: String,
@@ -37,12 +38,30 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
-    unreadMessages: [unreadMessageSchema], // <-- Add this line
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: String,
+    verificationTokenExpiry: Date,
+    resetPasswordToken: String,
+    resetPasswordTokenExpiry: Date,
+    otp: String, // <-- ADD THIS
+    otpExpiry: Date, // <-- ADD THIS
+    unreadMessages: [
+      {
+        from: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        count: { type: Number, default: 0 },
+      },
+    ],
   },
   { timestamps: true }
 );
 
+userSchema.pre("save", function (next) {
+  this.email = this.email.toLowerCase();
+  next();
+});
 const User = mongoose.model("User", userSchema);
 
 export default User;

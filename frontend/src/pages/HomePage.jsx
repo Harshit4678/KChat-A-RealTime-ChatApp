@@ -7,10 +7,10 @@ import Navbar from "../components/Navbar.jsx";
 
 const HomePage = () => {
   const { selectedUser } = useChatStore();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to toggle sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
 
-  // Close sidebar when clicking outside of it
+  // Close sidebar on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
@@ -34,9 +34,9 @@ const HomePage = () => {
       {/* Navbar */}
       <Navbar setIsSidebarOpen={setIsSidebarOpen} />
 
-      <div className="flex items-center justify-center pt-20 px-4">
-        <div className="bg-base-100 rounded-lg shadow-cl w-full max-w-6xl h-[calc(100vh-8rem)] relative">
-          <div className="flex h-full rounded-lg overflow-hidden relative">
+      <div className="flex items-center justify-center pt-16 sm:pt-20 px-0 sm:px-4 h-full sm:h-auto">
+        <div className="bg-base-100 w-full sm:max-w-6xl h-full sm:h-[calc(100vh-8rem)] sm:rounded-lg shadow-cl relative">
+          <div className="flex h-full sm:rounded-lg overflow-hidden relative">
             {/* Sidebar */}
             <div
               ref={sidebarRef}
@@ -44,13 +44,13 @@ const HomePage = () => {
                 isSidebarOpen ? "translate-x-0 z-50" : "-translate-x-full"
               }`}
               style={{
-                maxWidth: "20rem", // Max width for larger devices
+                maxWidth: "20rem",
               }}
             >
               <Sidebar />
             </div>
 
-            {/* Main Content */}
+            {/* Chat Area */}
             <div
               className={`flex-1 overflow-y-auto transition-all duration-300 ${
                 isSidebarOpen ? "sm:ml-0 z-40" : "w-full"

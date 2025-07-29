@@ -17,6 +17,8 @@ export const useAuthStore = create((set, get) => ({
   socket: null,
   banInfo: null,
 
+  setAuthUser: (user) => set({ authUser: user }),
+
   checkAuth: async () => {
     try {
       const res = await axiosIntance.get("/auth/check");
@@ -47,8 +49,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosIntance.post("/auth/signup", data);
-      set({ authUser: res.data });
-      toast.success("Account created successfully");
+      toast.success(res.data.message || "Account created successfully");
       get().connectSocket();
     } catch (error) {
       toast.error(error.response.data.message);

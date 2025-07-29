@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 
 export const generateToken = (userId, res) => {
   const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -13,4 +14,22 @@ export const generateToken = (userId, res) => {
   });
 
   return token;
+};
+
+export const sendEmail = async (to, subject, html) => {
+  // Use your SMTP config here
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"Chat App" <${process.env.SMTP_EMAIL}>`,
+    to,
+    subject,
+    html,
+  });
 };
