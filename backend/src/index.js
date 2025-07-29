@@ -25,7 +25,11 @@ app.use(cookieParser());
 // CORS configuration
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://kchat-admin-panel.onrender.com",
+    ],
     credentials: true,
   })
 );
