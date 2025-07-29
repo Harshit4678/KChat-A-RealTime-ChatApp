@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import io from "socket.io-client";
-import { decryptMessage } from "../../../frontend/src/lib/encryption";
+import { decryptMessage } from "../utils/encryption";
 import { motion as Motion } from "framer-motion";
 import { FaEye, FaTrash, FaSort, FaThList, FaThLarge } from "react-icons/fa";
 import { MdOutlineFilterAlt } from "react-icons/md";
