@@ -15,7 +15,7 @@ import Notifications from "./pages/Notifications";
 import { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
 import { useAdminStore } from "./store/useAdminStore";
-import axios from "axios";
+import API from "./api/auth";
 
 export default function App() {
   const setAdmin = useAdminStore((s) => s.setAdmin);
@@ -23,11 +23,7 @@ export default function App() {
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (token) {
-      axios
-        .get(`${import.meta.env.VITE_API_URL}/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        })
+      API.get("/me")
         .then((res) => setAdmin(res.data.admin))
         .catch(() => setAdmin(null));
     }
