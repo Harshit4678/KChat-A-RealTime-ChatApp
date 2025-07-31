@@ -5,7 +5,14 @@ import daisyui from "daisyui";
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      blur: {
+        "3xl": "64px",
+      },
+      animation: {
+        "bounce-pulse": "bounce 2s infinite, pulse 3s infinite",
+      },
+    },
   },
   plugins: [daisyui],
   daisyui: {

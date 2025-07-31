@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore.js";
-import { Image, X, Smile, Send } from "lucide-react";
+import { Image, X, Smile, SendHorizonal } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import toast from "react-hot-toast";
 import imageCompression from "browser-image-compression";
@@ -10,21 +10,21 @@ const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+
   const fileInputRef = useRef(null);
   const emojiPickerRef = useRef(null);
-  const { sendMessage } = useChatStore();
+  const textareaRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+
+  const { sendMessage, socket, currentChatUser, authUser } = useChatStore();
+  const secretKey = "shared-key-for-this-chat";
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    if (!file) {
-      toast.error("No file selected");
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      return;
-    }
+    if (!file) return toast.error("No file selected");
+    if (!file.type.startsWith("image/"))
+      return toast.error("Please select an image file");
 
     try {
       const compressedFile = await imageCompression(file, {
@@ -32,10 +32,9 @@ const MessageInput = () => {
         maxWidthOrHeight: 1024,
       });
 
-      // Convert compressed file to base64 string
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result); // For preview and sending
+        setImagePreview(reader.result);
       };
       reader.readAsDataURL(compressedFile);
     } catch {
@@ -48,35 +47,60 @@ const MessageInput = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const secretKey = "shared-key-for-this-chat";
-
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
 
     try {
       const encryptedText = text ? encryptMessage(text.trim(), secretKey) : "";
+      const encryptedImage = imagePreview
+        ? encryptMessage(imagePreview, secretKey)
+        : null;
 
-      let encryptedImage = null;
-      if (imagePreview) {
-        encryptedImage = encryptMessage(imagePreview, secretKey); // Encrypt base64 string
-      }
-
-      await sendMessage({
-        text: encryptedText,
-        image: encryptedImage,
-      });
+      await sendMessage({ text: encryptedText, image: encryptedImage });
 
       setText("");
       setImagePreview(null);
-      fileInputRef.current.value = "";
+      socket.emit("typing", { to: currentChatUser._id, isTyping: false });
+
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (textareaRef.current) textareaRef.current.focus();
     } catch (error) {
       console.error("Failed to send message", error);
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e);
+    }
+  };
+
+  const handleChange = (e) => {
+    setText(e.target.value);
+    socket.emit("typing", { to: currentChatUser._id, isTyping: true });
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("typing", {
+        senderId: authUser._id,
+        receiverId: currentChatUser._id,
+      });
+    }, 1000);
+  };
+
   const handleEmojiClick = (emojiObject) => {
-    setText((prevText) => prevText + emojiObject.emoji);
+    setText((prev) => prev + emojiObject.emoji);
+    socket.emit("typing", { to: currentChatUser._id, isTyping: true });
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("typing", {
+        senderId: authUser._id,
+        receiverId: currentChatUser._id,
+      });
+    }, 1000);
   };
 
   useEffect(() => {
@@ -92,25 +116,54 @@ const MessageInput = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, []);
 
+  useEffect(() => {
+    if (!socket || !currentChatUser) return;
+
+    const handleTypingStatus = ({ from, isTyping }) => {
+      if (from === currentChatUser._id) {
+        setOtherUserTyping(isTyping);
+      }
+    };
+
+    socket.on("typing", handleTypingStatus);
+    return () => socket.off("typing", handleTypingStatus);
+  }, [socket, currentChatUser]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(
+        textareaRef.current.scrollHeight,
+        160
+      )}px`;
+    }
+  }, [text]);
+
   return (
-    <div className="p-4 w-full">
+    <div className="px-4 pt-2 pb-4 backdrop-blur-md bg-white/70 dark:bg-zinc-900/60 border-t border-gray-200 dark:border-zinc-700 shadow-inner">
+      {otherUserTyping && (
+        <div className="text-xs text-primary mb-1 px-1 animate-pulse font-medium">
+          {currentChatUser?.name || "User"} is typing...
+        </div>
+      )}
+
       {imagePreview && (
         <div className="mb-3 flex items-center gap-2">
           <div className="relative">
             <img
               src={imagePreview}
               alt="Preview"
-              className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
+              className="w-20 h-20 object-cover rounded-xl border border-zinc-400 shadow-md"
             />
             <button
               onClick={removeImage}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300 flex items-center justify-center"
-              type="button"
+              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full shadow"
             >
-              <X className="size-3" />
+              <X size={14} />
             </button>
           </div>
         </div>
@@ -118,16 +171,21 @@ const MessageInput = () => {
 
       <form
         onSubmit={handleSendMessage}
-        className="flex items-center gap-2 relative"
+        className="flex items-end gap-2 relative"
       >
         <div className="relative flex-1">
-          <input
-            type="text"
-            className="w-full input input-bordered rounded-lg input-sm sm:input-md pr-16"
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            className="w-full rounded-lg resize-none max-h-40 overflow-y-auto pr-12 pl-3 py-2 border focus:outline-none focus:ring-2 transition-colors
+    bg-white text-black border-gray-300 focus:ring-primary 
+    dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
             placeholder="Type a message..."
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
           />
+
           <input
             type="file"
             accept="image/*"
@@ -135,45 +193,45 @@ const MessageInput = () => {
             ref={fileInputRef}
             onChange={handleImageChange}
           />
+
           <button
             type="button"
-            className={`absolute top-1/2 right-12 transform -translate-y-1/2 btn btn-circle btn-sm ${
-              imagePreview ? "text-emerald-500" : "text-zinc-400"
-            }`}
+            className="absolute bottom-2.5 right-10 btn btn-circle btn-xs text-gray-600 dark:text-gray-300"
             onClick={() => fileInputRef.current?.click()}
           >
-            <Image size={18} />
+            <Image size={16} />
+          </button>
+
+          <button
+            type="button"
+            className="absolute bottom-2.5 right-2 btn btn-circle btn-xs text-gray-600 dark:text-gray-300"
+            onClick={() => setShowEmojiPicker((prev) => !prev)}
+          >
+            <Smile size={16} />
           </button>
         </div>
 
         <button
-          type="button"
-          className="absolute top-1/2 right-12 transform -translate-y-1/2 btn btn-circle btn-sm"
-          onClick={() => setShowEmojiPicker((prev) => !prev)}
-        >
-          <Smile size={20} />
-        </button>
-
-        {showEmojiPicker && (
-          <div
-            className={`absolute z-50 ${
-              window.innerWidth <= 640
-                ? "bottom-0 left-0 w-full h-[40vh] overflow-y-scroll bg-white shadow-lg rounded-t-lg"
-                : "bottom-14 right-1"
-            }`}
-            ref={emojiPickerRef}
-          >
-            <EmojiPicker onEmojiClick={handleEmojiClick} />
-          </div>
-        )}
-        <button
           type="submit"
-          className="btn btn-sm btn-circle text-gray-800 dark:text-white"
+          className="flex items-center justify-center gap-1 px-2 py-2 rounded-full text-white bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md dark:from-blue-400 dark:to-indigo-500 disabled:opacity-40"
           disabled={!text.trim() && !imagePreview}
         >
-          <Send size={20} className="text-white hover:divide-zinc-900" />
+          <SendHorizonal size={24} className="mt-[1px]" />
         </button>
       </form>
+
+      {showEmojiPicker && (
+        <div
+          className={`absolute z-50 ${
+            window.innerWidth <= 640
+              ? "bottom-0 left-0 w-full h-[40vh] overflow-y-scroll bg-white shadow-lg rounded-t-xl"
+              : "bottom-24 right-6"
+          }`}
+          ref={emojiPickerRef}
+        >
+          <EmojiPicker onEmojiClick={handleEmojiClick} />
+        </div>
+      )}
     </div>
   );
 };

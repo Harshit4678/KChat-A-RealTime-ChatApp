@@ -9,6 +9,17 @@ const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile, logout } = useAuthStore();
   const [selectedimg, setSelectedImg] = useState(null);
 
+  const [name, setName] = useState(authUser?.fullName || "");
+  const [isEditingName, setIsEditingName] = useState(false);
+
+  const handleNameUpdate = async () => {
+    if (!name.trim()) {
+      toast.error("Name cannot be empty");
+      return;
+    }
+    await updateProfile({ fullName: name });
+    setIsEditingName(false);
+  };
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -102,10 +113,45 @@ const ProfilePage = () => {
               <div className="text-sm text-zinc-400 flex items-center gap-2">
                 <User className="w-4 h-4" />
                 Full Name
+                {!isEditingName && (
+                  <button
+                    className="ml-2 text-xs underline"
+                    onClick={() => setIsEditingName(true)}
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
-              <p className="px-4 py-2.5 bg-base-200 rounded-lg border">
-                {authUser?.fullName}
-              </p>
+              {isEditingName ? (
+                <div className="flex gap-2">
+                  <input
+                    className="px-4 py-2.5 bg-base-200 rounded-lg border flex-1"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isUpdatingProfile}
+                  />
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={handleNameUpdate}
+                    disabled={isUpdatingProfile}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => {
+                      setIsEditingName(false);
+                      setName(authUser.fullName);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <p className="px-4 py-2.5 bg-base-200 rounded-lg border">
+                  {authUser?.fullName}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5">

@@ -14,6 +14,7 @@ const ChatHeader = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [callSeconds, setCallSeconds] = useState(0);
   const timerRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Video call states
   const [isCallOpen, setIsCallOpen] = useState(false);
@@ -241,6 +242,22 @@ const ChatHeader = () => {
     cleanupMedia();
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   // Delete chat
   const handleDeleteChat = async () => {
     if (window.confirm("Are you sure you want to delete this chat?")) {
@@ -320,7 +337,7 @@ const ChatHeader = () => {
             <VideoIcon size={20} />
           </button>
 
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen((prev) => !prev)}
               className="btn btn-sm btn-circle"
