@@ -132,6 +132,14 @@ io.on("connection", (socket) => {
       }
     }
   );
+
+  socket.on("typing", ({ senderId, receiverId }) => {
+    socket.to(receiverId).emit("showTyping", { senderId });
+  });
+
+  socket.on("stopTyping", ({ senderId, receiverId }) => {
+    socket.to(receiverId).emit("hideTyping", { senderId });
+  });
 });
 
 export { io, app, server };
