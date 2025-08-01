@@ -41,7 +41,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                     K
                   </span>
 
-                  <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent text-lg sm:text-xl font-bold transition-all duration-300 group-hover:brightness-110">
+                  <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent text-lg sm:text-xl font-bold transition-all duration-300 group-hover:brightness-110 animate-pulse">
                     Chat
                   </span>
                 </div>

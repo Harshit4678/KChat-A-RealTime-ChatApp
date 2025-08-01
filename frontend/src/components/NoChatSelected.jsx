@@ -3,12 +3,24 @@ import { motion as Motion } from "framer-motion";
 
 const NoChatSelected = () => {
   return (
-    <div className="w-full h-full flex items-start md:items-center justify-center bg-base-100 pt-24 pb-32 md:pt-0 md:pb-0 px-4">
+    <div className="w-full h-full flex items-start md:items-center justify-center bg-base-100 relative overflow-hidden pt-24 pb-32 md:pt-0 md:pb-0 px-4">
+      {/* Border Feel Glow Layer */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {/* Glow corners */}
+        <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-br-full blur-2xl" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-accent/20 to-transparent rounded-bl-full blur-2xl" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-secondary/20 to-transparent rounded-tr-full blur-2xl" />
+        <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-purple-500/20 to-transparent rounded-tl-full blur-2xl" />
+
+        {/* Inner subtle border glow */}
+        <div className="absolute inset-4 border border-white/10 rounded-3xl blur-[2px]" />
+      </div>
+
       <Motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="max-w-md w-full text-center px-6 rounded-3xl bg-base-200/60 backdrop-blur-md space-y-8 py-16 shadow-md"
+        className="max-w-md w-full text-center px-6 py-16 rounded-3xl backdrop-blur-lg bg-white/60 dark:bg-base-200/60  relative z-10 space-y-8"
       >
         {/* Logo Icon */}
         <Motion.div
@@ -26,19 +38,15 @@ const NoChatSelected = () => {
             Welcome to
           </h1>
 
-          {/* KChat Glow + Pulse */}
+          {/* KChat Logo */}
           <div className="relative z-10 group flex items-center gap-1">
-            {/* K with pulse */}
-            <span className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary to-accent text-white font-black text-lg sm:text-xl leading-none transform transition-transform group-hover:scale-105 animate-bounce-pulse">
+            <span className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-primary to-accent text-white font-black text-2xl sm:text-3xl leading-none transform transition-transform group-hover:scale-105 animate-bounce-pulse">
               K
             </span>
-
-            <span className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110">
+            <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-pulse">
               Chat
             </span>
-
-            {/* Glow ring */}
-            <div className="absolute inset-0 rounded-xl blur-lg opacity-30 z-0 bg-gradient-to-r from-primary to-accent scale-110" />
+            <div className="absolute inset-0 rounded-xl blur-lg opacity-20 z-0 bg-gradient-to-r from-primary to-accent scale-110" />
           </div>
 
           <p className="text-base text-base-content/70 font-medium mt-1">

@@ -213,7 +213,7 @@ const MessageInput = () => {
 
         <button
           type="submit"
-          className="flex items-center justify-center gap-1 px-2 py-2 rounded-full text-white bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md dark:from-blue-400 dark:to-indigo-500 disabled:opacity-40"
+          className="flex items-center justify-center gap-1 px-2 py-2 rounded-full text-white bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md dark:from-blue-400 dark:to-indigo-500 disabled:opacity-40  animate-bounce-pulse"
           disabled={!text.trim() && !imagePreview}
         >
           <SendHorizonal size={24} className="mt-[1px]" />

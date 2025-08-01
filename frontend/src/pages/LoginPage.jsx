@@ -40,18 +40,18 @@ const LoginPage = () => {
           >
             <div className="relative z-10 group flex items-center gap-1">
               {/* K with pulse */}
-              <span className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary to-accent text-white font-black text-lg sm:text-xl leading-none transform transition-transform group-hover:scale-105 animate-bounce-pulse">
+              <span className="inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white font-black text-xl sm:text-2xl leading-none transform transition-transform group-hover:scale-105 animate-bounce-pulse">
                 K
               </span>
 
-              <span className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110">
+              <span className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-pulse">
                 Chat
               </span>
 
               {/* Glow ring */}
-              <div className="absolute inset-0 rounded-xl blur-lg opacity-30 z-0 bg-gradient-to-r from-primary to-accent scale-110" />
+              <div className="absolute inset-0 rounded-xl blur-lg opacity-20 z-0 bg-gradient-to-r from-primary to-accent scale-110" />
             </div>
-            <h1 className="text-2xl font-bold font-serif color-primary">
+            <h1 className="text-2xl font-bold font-serif text-primary">
               Login
             </h1>
             <p className="text-gray-500 text-sm -mt-2">
