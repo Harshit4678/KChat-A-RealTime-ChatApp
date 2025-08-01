@@ -6,6 +6,7 @@ import Message from "../models/message.model.js";
 import crypto from "crypto";
 import { sendEmail } from "../lib/sendEmail.js";
 import validator from "validator";
+import PendingUser from "../models/pendingUser.model.js";
 
 export const signup = async (req, res) => {
   try {
@@ -13,51 +14,48 @@ export const signup = async (req, res) => {
     if (!fullName || !email || !password)
       return res.status(400).json({ message: "All fields are required" });
 
-    // Email format check
     if (!validator.isEmail(email))
       return res.status(400).json({ message: "Invalid email format" });
 
-    // Block disposable emails (basic)
-    if (email.endsWith("@tempmail.com") || email.endsWith("@mailinator.com"))
-      return res.status(400).json({ message: "Disposable emails not allowed" });
-
+    // Check if user already exists (verified)
     const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists)
       return res.status(400).json({ message: "User already exists" });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Remove any previous pending user for this email
+    await PendingUser.deleteMany({ email: email.toLowerCase() });
 
-    // Generate OTP
+    // Generate OTP and verification token
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiry = Date.now() + 1000 * 60 * 10; // 10 min
-
-    // Generate verification token for link
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenExpiry = Date.now() + 1000 * 60 * 10; // 10 min
 
-    const user = await User.create({
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Save to PendingUser
+    await PendingUser.create({
       fullName,
       email: email.toLowerCase(),
-      password: hashedPassword,
-      isVerified: false,
-      verificationToken,
-      verificationTokenExpiry,
+      hashedPassword,
       otp,
       otpExpiry,
+      verificationToken,
+      verificationTokenExpiry,
     });
 
-    // Send verification email (OTP + link)
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}&email=${user.email}`;
+    // Send verification email
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}&email=${email}`;
     await sendEmail(
-      user.email,
+      email,
       "Verify your email",
       `<p>Your OTP is <b>${otp}</b></p>
       <p>Or click <a href="${verifyUrl}">here</a> to verify your email. This link and OTP will expire in 10 minutes.</p>`
     );
 
-    res.status(201).json({
+    res.status(200).json({
       message: "Verification email sent. Please check your inbox.",
-      email: user.email,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
@@ -66,38 +64,46 @@ export const signup = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
   try {
-    const { email, token, otp } = req.body;
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const { email, otp, token } = req.body;
 
-    if (!user || user.isVerified)
-      return res.status(400).json({ message: "Invalid or already verified" });
+    const pending = await PendingUser.findOne({ email: email.toLowerCase() });
+    if (!pending)
+      return res.status(400).json({ message: "No pending verification found" });
 
-    // OTP verify
-    if (otp) {
-      if (user.otp !== otp || user.otpExpiry < Date.now()) {
-        return res.status(400).json({ message: "Invalid or expired OTP" });
-      }
-    }
-    // Link verify
-    else if (token) {
-      if (
-        user.verificationToken !== token ||
-        user.verificationTokenExpiry < Date.now()
-      ) {
-        return res.status(400).json({ message: "Invalid or expired link" });
-      }
-    } else {
-      return res.status(400).json({ message: "OTP or link required" });
-    }
+    // Check OTP or token
+    const now = Date.now();
+    let valid = false;
+    if (otp && pending.otp === otp && pending.otpExpiry > now) valid = true;
+    if (
+      token &&
+      pending.verificationToken === token &&
+      pending.verificationTokenExpiry > now
+    )
+      valid = true;
 
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpiry = undefined;
-    user.otp = undefined;
-    user.otpExpiry = undefined;
-    await user.save();
+    if (!valid)
+      return res.status(400).json({ message: "Invalid or expired OTP/link" });
 
-    res.status(200).json({ message: "Email verified successfully" });
+    // Double check: user already exists?
+    const userExists = await User.findOne({ email: email.toLowerCase() });
+    if (userExists)
+      return res.status(400).json({ message: "User already exists" });
+
+    // Create user
+    const user = await User.create({
+      fullName: pending.fullName,
+      email: pending.email,
+      password: pending.hashedPassword,
+      isVerified: true,
+    });
+
+    // Remove pending user
+    await PendingUser.deleteOne({ _id: pending._id });
+
+    res.status(201).json({
+      message: "Email verified and account created!",
+      user: { email: user.email, fullName: user.fullName },
+    });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
   }
@@ -105,23 +111,25 @@ export const verifyEmail = async (req, res) => {
 export const resendOtp = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user || user.isVerified)
-      return res.status(400).json({ message: "Invalid request" });
+    const pending = await PendingUser.findOne({ email: email.toLowerCase() });
+    if (!pending)
+      return res.status(400).json({ message: "No pending verification found" });
 
     // Generate new OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.otp = otp;
-    user.otpExpiry = Date.now() + 1000 * 60 * 10;
-    await user.save();
+    const otpExpiry = Date.now() + 1000 * 60 * 10; // 10 min
+
+    pending.otp = otp;
+    pending.otpExpiry = otpExpiry;
+    await pending.save();
 
     await sendEmail(
-      user.email,
+      email,
       "Your new OTP",
       `<p>Your new OTP is <b>${otp}</b></p>`
     );
 
-    res.status(200).json({ message: "OTP resent to your email" });
+    res.status(200).json({ message: "OTP resent to your email." });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
   }
