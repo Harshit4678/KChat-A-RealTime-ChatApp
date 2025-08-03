@@ -37,17 +37,20 @@ const Navbar = ({ setIsSidebarOpen }) => {
                   <div className="absolute inset-0 rounded-lg blur-md opacity-10 bg-gradient-to-r from-primary to-accent scale-105 pointer-events-none -z-10" />
 
                   {/* Pulsing K */}
-                  <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-primary to-accent text-white shadow-md font-black text-base sm:text-lg leading-none transform transition-transform group-hover:scale-105 animate-pulse ">
+                  <span className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-primary to-accent text-white shadow-md font-black text-lg sm:text-xl leading-none transform transition-transform group-hover:scale-105 animate-pulse ">
                     K
                   </span>
 
-                  <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent text-lg sm:text-xl font-bold transition-all duration-300 group-hover:brightness-110 animate-pulse">
-                    Chat
+                  <span className="relative bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent text-base sm:text-xl font-bold transition-all duration-300 group-hover:brightness-110 animate-pulse">
+                    LikChat
+                    <span className="absolute -top-1 text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-bounce-pulse">
+                      💬
+                    </span>
                   </span>
                 </div>
 
                 <span className="mt-1 text-[0.7rem] sm:text-xs text-base-content/60 font-medium tracking-wide hidden sm:block group-hover:opacity-80 transition-opacity">
-                  Where real-time meets real people
+                  Spark real vibes with a KLik
                 </span>
               </div>
             </Link>

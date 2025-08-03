@@ -187,7 +187,10 @@ const SignUpPage = () => {
               </span>
 
               <span className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-pulse">
-                Chat
+                LikChat
+                <span className="absolute -top-1 text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-bounce-pulse">
+                  💬
+                </span>
               </span>
 
               {/* Glow ring */}

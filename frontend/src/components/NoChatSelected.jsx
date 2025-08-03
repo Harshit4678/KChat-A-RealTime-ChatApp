@@ -20,7 +20,7 @@ const NoChatSelected = () => {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="max-w-md w-full text-center px-6 py-16 rounded-3xl backdrop-blur-lg bg-white/60 dark:bg-base-200/60  relative z-10 space-y-8"
+        className="max-w-md w-full text-center items-center justify-center px-6 py-16 rounded-3xl backdrop-blur-lg bg-white/60 dark:bg-base-200/60  relative z-10 space-y-8"
       >
         {/* Logo Icon */}
         <Motion.div
@@ -40,17 +40,25 @@ const NoChatSelected = () => {
 
           {/* KChat Logo */}
           <div className="relative z-10 group flex items-center gap-1">
+            {/* K Letter */}
             <span className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-primary to-accent text-white font-black text-2xl sm:text-3xl leading-none transform transition-transform group-hover:scale-105 animate-bounce-pulse">
               K
             </span>
-            <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-pulse">
-              Chat
+
+            {/* LikChat + 💬 */}
+            <span className="relative text-3xl text-center sm:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-pulse">
+              LikChat
+              <span className="absolute -top-1 text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-bounce-pulse">
+                💬
+              </span>
             </span>
+
+            {/* Background glow */}
             <div className="absolute inset-0 rounded-xl blur-lg opacity-20 z-0 bg-gradient-to-r from-primary to-accent scale-110" />
           </div>
 
           <p className="text-base text-base-content/70 font-medium mt-1">
-            Where real-time meets real people.
+            Spark real vibes with a KLik
           </p>
         </Motion.div>
 
