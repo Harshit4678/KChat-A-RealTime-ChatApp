@@ -11,14 +11,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and run containers
+      - name: Docker Compose Build & Run
         run: |
           docker-compose up -d --build
+          echo "⏳ Waiting for services to be ready..."
           sleep 20
           docker-compose ps
-          docker-compose down
+
+      - name: Run Tests (optional)
+        run: |
+          echo "✅ You can add test commands here"
+          # Example:
+          # docker exec backend-container-name npm test
+
+      - name: Shutdown Docker
+        run: docker-compose down
