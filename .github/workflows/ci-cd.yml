@@ -19,16 +19,15 @@ jobs:
 
       - name: Docker Compose Build & Run
         run: |
-          docker-compose up -d --build
+          docker compose up -d --build
           echo "⏳ Waiting for services to be ready..."
           sleep 20
-          docker-compose ps
+          docker compose ps
 
       - name: Run Tests (optional)
         run: |
-          echo "✅ You can add test commands here"
-          # Example:
-          # docker exec backend-container-name npm test
+          echo "✅ Add your tests here"
+          # docker exec <container-name> npm test
 
       - name: Shutdown Docker
-        run: docker-compose down
+        run: docker compose down
