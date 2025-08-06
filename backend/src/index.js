@@ -28,7 +28,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-      "https://klikchat-2025.vercel.app"
+      "https://klikchat-2025.vercel.app",
       "https://k-chat-admin-panel.vercel.app",
     ],
     credentials: true,
