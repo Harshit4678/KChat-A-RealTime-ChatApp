@@ -234,15 +234,10 @@ export const resetPasswordWithOtp = async (req, res) => {
 export const logout = (req, res) => {
   try {
     res.cookie("jwt", "", {
-      maxAge: 0,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      // domain flag only for production and your frontend domain
-      domain:
-        process.env.NODE_ENV === "production"
-          ? "klikchat-2025.vercel.app"
-          : undefined,
     });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
