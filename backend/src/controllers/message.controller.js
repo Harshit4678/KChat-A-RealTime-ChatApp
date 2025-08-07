@@ -21,6 +21,7 @@ export const getUsersForSidebar = async (req, res) => {
       );
       return {
         ...user.toObject(),
+        fullName: user.fullName || "", // <-- Ensure fullName is always a string
         unreadCount: unreadEntry ? unreadEntry.count : 0,
       };
     });

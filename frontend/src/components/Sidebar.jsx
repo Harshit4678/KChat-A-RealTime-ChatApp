@@ -22,7 +22,8 @@ const Sidebar = () => {
     if (onlineUsers.includes(b._id) !== onlineUsers.includes(a._id)) {
       return onlineUsers.includes(b._id) ? 1 : -1;
     }
-    return a.fullName.localeCompare(b.fullName);
+    // Fallback to empty string if fullName is missing
+    return (a.fullName || "").localeCompare(b.fullName || "");
   });
 
   const filteredUsers = showOnlineOnly
