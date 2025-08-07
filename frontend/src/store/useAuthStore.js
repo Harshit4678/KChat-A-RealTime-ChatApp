@@ -30,7 +30,7 @@ export const useAuthStore = create((set, get) => ({
         set({
           banInfo: {
             message: res.data.message,
-            adminEmail: res.data.adminEmail || "admin@example.com",
+            adminEmail: res.data.adminEmail || "admin@xxxx.com",
           },
           authUser: null,
         });
@@ -71,7 +71,7 @@ export const useAuthStore = create((set, get) => ({
         set({
           banInfo: {
             message: res.data.message,
-            adminEmail: res.data.adminEmail || "admin@example.com",
+            adminEmail: res.data.adminEmail || "admin@xxxx.com",
           },
         });
       } else {
