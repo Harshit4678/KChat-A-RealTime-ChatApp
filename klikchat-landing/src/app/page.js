@@ -7,17 +7,33 @@ import FAQSection from "@/components/FAQSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import StickyCTA from "@/components/StickyCTA";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
-    <main className="bg-background text-foreground overflow-x-hidden">
-      <HeroSection />
-      <StickyCTA />
-      <FeaturesSection />
-      <ScreenshotsSection />
-      <FAQSection />
-      <CTASection />
-      <Footer />
-    </main>
+    <>
+      <Navbar />
+      <main className="bg-background text-foreground overflow-x-hidden">
+        <section id="home">
+          <HeroSection />
+        </section>
+        <StickyCTA />
+        <section id="features">
+          <FeaturesSection />
+        </section>
+        <section id="how">
+          {" "}
+          <ScreenshotsSection />
+        </section>
+        <section id="faqs">
+          <FAQSection />
+        </section>
+        <CTASection />
+        <section id="contact">
+          {" "}
+          <Footer />
+        </section>
+      </main>
+    </>
   );
 }

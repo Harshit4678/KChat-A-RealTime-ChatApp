@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://klikchat-2025.vercel.app/sitemap.xml
+Sitemap: https://klikchat.fun/sitemap.xml
+Host: https://klikchat.fun

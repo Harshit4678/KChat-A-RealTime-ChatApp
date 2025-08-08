@@ -26,7 +26,10 @@ const CTASection = () => {
           make every message count.
         </p>
 
-        <Button className="text-lg px-6 py-4 rounded-full bg-gradient-to-r from-primary to-accent text-white font-semibold shadow-lg hover:scale-105 transition-transform duration-300">
+        <Button
+          className="text-lg px-6 py-4 rounded-full bg-gradient-to-r from-primary to-accent text-white font-semibold shadow-lg hover:scale-105 transition-transform duration-300"
+          href="https://app.klikchat.fun"
+        >
           Get Started 💬
         </Button>
       </div>

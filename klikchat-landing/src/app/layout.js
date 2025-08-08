@@ -4,46 +4,49 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  metadataBase: new URL("https://klikchat.app"),
-  title: {
-    default: "KLikChat💬 - Spark real vibes with a KLik",
-    template: "%s | KLikChat",
-  },
+  title: "KLikChat💬 - Spark real vibes with a KLik",
   description:
-    "Real-time chat & video call app with modern UI, end-to-end encryption, and blazing fast performance. Try KLikChat now!",
+    "KLikChat is a real-time encrypted chat and video calling app with modern UI and blazing-fast performance. Join now and spark real vibes with a KLik!",
   keywords: [
     "KLikChat",
     "chat app",
     "video calling app",
-    "real-time chat",
-    "WebRTC app",
-    "MERN chat app",
-    "chat app with themes",
-    "end to end encrypted chat",
+    "real-time messaging",
+    "encrypted chat app",
     "React chat app",
     "Next.js SEO landing page",
+    "MERN chat app",
+    "WebRTC app",
+    "secure chat platform",
   ],
+  metadataBase: new URL("https://klikchat.fun"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "KLikChat💬 - Spark real vibes with a KLik",
     description:
       "A secure, stylish real-time chat and video calling app made for modern connections.",
-    url: "https://klikchat-2025.vercel.app",
+    url: "https://klikchat.fun",
     siteName: "KLikChat",
     images: [
       {
-        url: "/preview.png",
+        url: "/preview1.png",
         width: 1200,
         height: 630,
-        alt: "KLikChat Preview",
+        alt: "KLikChat Preview Image",
       },
     ],
+    locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "KLikChat💬 - Spark real vibes with a KLik",
-    description: "Chat, call, connect — in style. Try KLikChat now.",
-    images: ["/preview.png"],
+    description:
+      "End-to-end encrypted real-time messaging & video calling app. Try KLikChat now!",
+    images: ["/preview1.png"],
+    creator: "@klikchat",
   },
   icons: {
     icon: "/chat-icon.png",
@@ -51,15 +54,25 @@ export const metadata = {
     apple: "/chat-icon.png",
   },
   themeColor: "#4f46e5",
-  robots: "index, follow",
-  alternates: {
-    canonical: "https://klikchat-2025.vercel.app/",
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" data-theme="likchat">
+      <head>
+        <link rel="icon" href="/fevicon.ico" type="image/png" />
+        <link rel="shortcut icon" href="/chat-icon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/chat-icon.png" />
+      </head>
       <body className={inter.className}>{children}</body>
     </html>
   );

@@ -83,7 +83,7 @@ export default function HeroSection() {
           transition={{ duration: 0.7, delay: 0.6 }}
         >
           <Link
-            href="https://klikchat-2025.vercel.app/"
+            href="https://app.klikchat.fun/"
             className="inline-flex items-center gap-2 px-6 py-4 rounded-full text-white text-lg font-semibold bg-gradient-to-r from-primary to-accent shadow-lg hover:scale-105 transition-transform hover:animate-bounce-pulse "
           >
             Start with one KLik
