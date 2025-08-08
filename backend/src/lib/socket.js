@@ -11,6 +11,7 @@ const io = new Server(server, {
     origin: [
       "http://localhost:5173", // frontend dev
       "http://localhost:5174", // admin panel dev
+      "https://app.klikchat.fun",
       "https://klikchat-2025.vercel.app", // frontend prod
       "https://k-chat-admin-panel.vercel.app", // admin panel prod
     ],

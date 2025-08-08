@@ -234,7 +234,7 @@ export const resetPasswordWithOtp = async (req, res) => {
 export const logout = (req, res) => {
   try {
     res.cookie("jwt", "", {
-      maxAge: 1000 * 60 * 60 * 24 * 7,
+      expires: new Date(0),
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",

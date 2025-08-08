@@ -29,7 +29,7 @@ export const sendEmail = async (to, subject, html) => {
   });
 
   await transporter.sendMail({
-    from: `"Chat App" <${process.env.SMTP_EMAIL}>`,
+    from: `"KLikChat" <${process.env.SMTP_EMAIL}>`,
     to,
     subject,
     html,
