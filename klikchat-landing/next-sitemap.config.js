@@ -2,7 +2,7 @@
 module.exports = {
   siteUrl: "https://www.klikchat.fun",
   generateRobotsTxt: true,
-  sitemapSize: 5000,
+  sitemapSize: 10000,
   changefreq: "daily",
   priority: 0.7,
 };
