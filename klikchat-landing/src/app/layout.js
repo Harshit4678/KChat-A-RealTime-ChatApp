@@ -31,12 +31,13 @@ export const metadata = {
     siteName: "KLikChat",
     images: [
       {
-        url: "/preview1.png",
+        url: "https://www.klikchat.fun/preview1.png",
         width: 400,
         height: 300,
         alt: "KLikChat Preview Image",
       },
     ],
+
     locale: "en_US",
     type: "website",
   },
