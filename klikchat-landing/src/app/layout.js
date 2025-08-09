@@ -32,8 +32,8 @@ export const metadata = {
     images: [
       {
         url: "https://www.klikchat.fun/preview1.png",
-        width: 400,
-        height: 300,
+        width: 200,
+        height: 200,
         alt: "KLikChat Preview Image",
       },
     ],
