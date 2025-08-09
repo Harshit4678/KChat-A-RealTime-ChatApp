@@ -86,7 +86,7 @@ export default function HeroSection() {
             href="https://app.klikchat.fun/"
             className="inline-flex items-center gap-2 px-6 py-4 rounded-full text-white text-lg font-semibold bg-gradient-to-r from-primary to-accent shadow-lg hover:scale-105 transition-transform hover:animate-bounce-pulse "
           >
-            Start with one KLik
+            Start Secure Chatting with KLikChat
             <ArrowRight className="w-5 h-5" />
           </Link>
         </motion.div>

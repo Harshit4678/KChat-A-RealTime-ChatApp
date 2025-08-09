@@ -36,7 +36,12 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="#home" className="relative group">
+          <Link
+            href="#home"
+            className="relative group"
+            aria-label="KLikChat Home"
+          >
+            <span className="sr-only">KLikChat Home</span>
             <div className="relative flex items-center space-x-1">
               <div className="relative">
                 <span className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full text-white text-lg sm:text-xl font-black bg-gradient-to-br from-violet-600 via-sky-500 to-cyan-400 shadow-lg z-10">

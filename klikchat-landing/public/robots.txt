@@ -1,5 +1,9 @@
+# *
 User-agent: *
 Allow: /
 
-Sitemap: https://klikchat.fun/sitemap.xml
-Host: https://klikchat.fun
+# Host
+Host: https://www.klikchat.fun
+
+# Sitemaps
+Sitemap: https://www.klikchat.fun/sitemap.xml

@@ -19,21 +19,21 @@ export const metadata = {
     "WebRTC app",
     "secure chat platform",
   ],
-  metadataBase: new URL("https://klikchat.fun"),
+  metadataBase: new URL("https://www.klikchat.fun"),
   alternates: {
-    canonical: "/",
+    canonical: "https://www.klikchat.fun",
   },
   openGraph: {
     title: "KLikChat💬 - Spark real vibes with a KLik",
     description:
       "A secure, stylish real-time chat and video calling app made for modern connections.",
-    url: "https://klikchat.fun",
+    url: "https://www.klikchat.fun",
     siteName: "KLikChat",
     images: [
       {
         url: "/preview1.png",
-        width: 1200,
-        height: 630,
+        width: 400,
+        height: 300,
         alt: "KLikChat Preview Image",
       },
     ],
@@ -49,9 +49,9 @@ export const metadata = {
     creator: "@klikchat",
   },
   icons: {
-    icon: "/chat-icon.png",
-    shortcut: "/chat-icon.png",
-    apple: "/chat-icon.png",
+    icon: "/fevicon.ico",
+    shortcut: "/fevicon.ico",
+    apple: "/fevicon.ico",
   },
   themeColor: "#4f46e5",
   robots: {
@@ -70,8 +70,8 @@ export default function RootLayout({ children }) {
     <html lang="en" data-theme="likchat">
       <head>
         <link rel="icon" href="/fevicon.ico" type="image/png" />
-        <link rel="shortcut icon" href="/chat-icon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/chat-icon.png" />
+        <link rel="shortcut icon" href="/fevicon.ico" type="image/png" />
+        <link rel="apple-touch-icon" href="/fevicon.ico" />
       </head>
       <body className={inter.className}>{children}</body>
     </html>
