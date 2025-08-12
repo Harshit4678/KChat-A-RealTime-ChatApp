@@ -53,8 +53,8 @@ export const metadata = {
     images: [
       {
         url: "https://www.klikchat.fun/black-preview.png",
-        width: 400,
-        height: 400,
+        width: 1200, // Recommended for WhatsApp
+        height: 630, // Recommended for WhatsApp
         alt: "KLikChat Preview Image",
       },
     ],
