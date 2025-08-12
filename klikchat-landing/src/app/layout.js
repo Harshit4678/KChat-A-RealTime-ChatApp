@@ -52,9 +52,9 @@ export const metadata = {
     siteName: "KLikChat",
     images: [
       {
-        url: "https://www.klikchat.fun/preview1.png",
-        width: 1200,
-        height: 630,
+        url: "https://www.klikchat.fun/black-preview.png",
+        width: 400,
+        height: 400,
         alt: "KLikChat Preview Image",
       },
     ],
