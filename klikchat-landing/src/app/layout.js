@@ -52,7 +52,7 @@ export const metadata = {
     siteName: "KLikChat",
     images: [
       {
-        url: "https://www.klikchat.fun/black-preview.png",
+        url: "https://www.klikchat.fun/preview2.jpg",
         width: 1200, // Recommended for WhatsApp
         height: 630, // Recommended for WhatsApp
         alt: "KLikChat Preview Image",
