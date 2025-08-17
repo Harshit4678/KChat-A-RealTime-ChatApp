@@ -28,7 +28,7 @@ export default function HeroSection() {
         </div>
 
         {/* CONTENT CENTER */}
-        <div className="flex flex-col items-center gap-8  sm:gap-10 text-center lg:flex-[2] w-full">
+        <div className="flex flex-col items-center gap-4 sm:gap-10 text-center lg:flex-[2] w-full">
           {/* Mobile: Chat bubble ABOVE logo */}
           <div className="lg:hidden ">
             <Lottie
