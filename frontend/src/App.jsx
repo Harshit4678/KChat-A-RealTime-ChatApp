@@ -8,13 +8,15 @@ import SignUpPage from "./pages/SignUpPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
-import { Loader } from "lucide-react";
+
 import { Toaster } from "react-hot-toast";
 import { useChatStore } from "./store/useChatStore";
 import BanMessageModal from "./components/BanMessageModal.jsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx"; // nayi file
 
 import VerifyEmailPage from "./pages/VerifyEmailPage.jsx";
+import Lottie from "lottie-react";
+import runningCartoon from "./animations/runningCartoon.json";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers, banInfo, logout } =
@@ -43,7 +45,10 @@ const App = () => {
   if (isCheckingAuth && !authUser)
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader className="size-10 animate-spin" />
+        <Lottie
+          animationData={runningCartoon}
+          className="w-40 h-40 sm:w-60 sm:h-60"
+        />
       </div>
     );
 
