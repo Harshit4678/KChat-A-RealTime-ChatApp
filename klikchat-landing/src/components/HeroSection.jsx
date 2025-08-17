@@ -28,13 +28,13 @@ export default function HeroSection() {
         </div>
 
         {/* CONTENT CENTER */}
-        <div className="flex flex-col items-center gap-2 sm:gap-14 text-center lg:flex-[2] w-full">
+        <div className="flex flex-col items-center gap-8  sm:gap-10 text-center lg:flex-[2] w-full">
           {/* Mobile: Chat bubble ABOVE logo */}
-          <div className="lg:hidden mb-2">
+          <div className="lg:hidden ">
             <Lottie
               animationData={require("../../public/animations/chat-bubbles.json")}
               loop={true}
-              className="w-28 h-28"
+              className="w-36 h-36"
             />
           </div>
 
@@ -43,7 +43,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex items-center gap-2 sm:gap-1 relative"
+            className="flex items-center pt-1 sm:pt-10 gap-2 sm:gap-1 relative"
           >
             <div className="relative z-10 group flex items-center gap-2 transform transition-all duration-500 hover:scale-125 animate-pulse">
               {/* Glowing K Circle */}
@@ -82,7 +82,7 @@ export default function HeroSection() {
             <Lottie
               animationData={require("../../public/animations/something.json")}
               loop={true}
-              className="w-32 h-32"
+              className="w-40 h-40"
             />
           </div>
 
@@ -91,7 +91,7 @@ export default function HeroSection() {
           <motion.h1
             initial="hidden"
             animate="visible"
-            className="text-2xl sm:text-5xl font-extrabold text-base-content max-w-3xl leading-tight text-slate-800"
+            className="text-2xl sm:text-5xl gap-2 sm:gap-4 font-extrabold text-base-content max-w-3xl leading-tight text-slate-800"
           >
             {"Private Chatting, Secure Video Calls, and Real-Time Vibes."
               .split("")
