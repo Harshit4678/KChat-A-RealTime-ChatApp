@@ -11,6 +11,7 @@ import {
   RefreshCcw,
   UserCheck,
 } from "lucide-react";
+import Lottie from "lottie-react";
 
 const features = [
   {
@@ -67,6 +68,13 @@ export default function FeaturesSection() {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
+          <div className="flex justify-center items-center mb-6">
+            <Lottie
+              animationData={require("../../public/animations/Chat Animation.json")}
+              loop={true}
+              className="w-32 h-32 sm:*:w-40 sm:h-40 md:w-48 md:h-48"
+            />
+          </div>
           <h2 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Everything You Need to Connect
           </h2>

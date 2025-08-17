@@ -53,8 +53,8 @@ export const metadata = {
     images: [
       {
         url: "https://www.klikchat.fun/preview2.jpg",
-        width: 1200, // Recommended for WhatsApp
-        height: 630, // Recommended for WhatsApp
+        width: 1200,
+        height: 630,
         alt: "KLikChat Preview Image",
       },
     ],
@@ -74,7 +74,6 @@ export const metadata = {
     shortcut: "/favicon.ico",
     apple: "/favicon.ico",
   },
-  themeColor: "#4f46e5",
   robots: {
     index: true,
     follow: true,
@@ -84,6 +83,11 @@ export const metadata = {
       follow: true,
     },
   },
+};
+
+// ✅ Theme color yahan shift karo
+export const viewport = {
+  themeColor: "#4f46e5",
 };
 
 export default function RootLayout({ children }) {

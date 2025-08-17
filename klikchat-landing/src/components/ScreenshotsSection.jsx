@@ -39,7 +39,6 @@ export default function ScreenshotsSection() {
               className="w-full bg-base-200 rounded-2xl border border-base-300 shadow-md overflow-hidden"
             >
               <div className="relative w-full pb-[177.78%] ">
-                {" "}
                 {/* 9/16 aspect ratio */}
                 <Image
                   src={`/demo/img-${i}.png`}
@@ -47,6 +46,7 @@ export default function ScreenshotsSection() {
                   fill
                   className="object-contain bg-base-200 rounded-2xl border border-base-300"
                   sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  priority={i === 1} // Add priority to the first image
                 />
               </div>
             </motion.div>

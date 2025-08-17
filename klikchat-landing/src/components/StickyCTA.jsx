@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
+import Lottie from "lottie-react";
 
 const StickyCTA = () => {
   const [isClicked, setIsClicked] = useState(false);
@@ -14,8 +15,15 @@ const StickyCTA = () => {
       whileDrag={{ scale: 1.1, rotate: 5 }}
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 300 }}
-      className="fixed bottom-6 right-6 z-50"
+      className="fixed bottom-6 right-6 z-50 animate-bounce"
     >
+      <div className="w-20 h-20 sm:w-28 sm:h-28">
+        <Lottie
+          animationData={require("../../public/animations/robot2.json")}
+          loop={true}
+        />
+      </div>
+
       <Link href="https://app.klikchat.fun/">
         <motion.button
           onClick={() => setIsClicked(true)}

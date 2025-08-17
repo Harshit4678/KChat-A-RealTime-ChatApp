@@ -27,7 +27,7 @@ const CTASection = () => {
         </p>
 
         <Button
-          className="text-lg px-6 py-4 rounded-full bg-gradient-to-r from-primary to-accent text-white font-semibold shadow-lg hover:scale-105 transition-transform duration-300"
+          className="text-lg px-6 py-4 rounded-full bg-gradient-to-r from-primary to-accent text-white font-semibold shadow-lg hover:scale-105 transition-transform duration-300 hover:animate-bounce-pulse"
           href="https://app.klikchat.fun"
         >
           Get Started 💬
