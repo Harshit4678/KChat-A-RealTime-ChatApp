@@ -11,6 +11,7 @@ import {
   resendOtp,
   verifyOtpForReset,
   resetPasswordWithOtp,
+  googleAuth,
 } from "../controllers/auth.controllers.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
@@ -20,6 +21,7 @@ router.post("/signup", signup);
 router.post("/verify-email", verifyEmail);
 router.post("/resend-otp", resendOtp);
 router.post("/login", login);
+router.post("/google", googleAuth);
 router.post("/logout", logout);
 
 router.post("/forgot-password", forgotPassword);

@@ -8,6 +8,10 @@ import { sendEmail } from "../lib/sendEmail.js";
 import validator from "validator";
 import PendingUser from "../models/pendingUser.model.js";
 
+import { OAuth2Client } from "google-auth-library"; // 👈 NEW IMPORT
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); // 👈 NEW CLIENT
+
 export const signup = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
@@ -165,6 +169,50 @@ export const login = async (req, res) => {
       profilePic: user.profilePic,
     });
   } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const googleAuth = async (req, res) => {
+  try {
+    const { token } = req.body; // frontend se Google ka id_token aayega
+
+    if (!token) return res.status(400).json({ message: "Token missing" });
+
+    // Verify token with Google
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    // Check if user already exists
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      // Create new user without password
+      user = await User.create({
+        fullName: name,
+        email: email.toLowerCase(),
+        profilePic: picture,
+        password: null, // google user has no password
+        isVerified: true,
+      });
+    }
+
+    // JWT cookie generate
+    generateToken(user._id, res);
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.error("Error in googleAuth controller:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
