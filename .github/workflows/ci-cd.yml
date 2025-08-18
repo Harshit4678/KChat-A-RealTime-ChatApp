@@ -17,6 +17,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Generate temporary .env file from GitHub Secrets
+      - name: Create backend .env
+        run: |
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> backend/.env
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> backend/.env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> backend/.env
+
       - name: Docker Compose Build & Run
         run: |
           docker compose up -d --build
@@ -31,3 +38,7 @@ jobs:
 
       - name: Shutdown Docker
         run: docker compose down
+
+      # Optional: Remove the temporary .env file after CI
+      - name: Cleanup .env
+        run: rm -f backend/.env
