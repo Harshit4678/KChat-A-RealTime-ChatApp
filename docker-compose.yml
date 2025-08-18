@@ -1,19 +1,38 @@
-services:
-  mongo:
-    image: mongo:6
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
+version: "3.9"
 
+services:
   backend:
     build: ./backend
-    env_file:
-      - ./backend/.env
+    container_name: backend
+    restart: unless-stopped
     ports:
       - "3000:3000"
+    environment:
+      # Production / CI secrets (GitHub Actions will inject these)
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - MONGO_URI=${MONGO_URI}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173} # Default local URL
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
 
-volumes:
-  mongo-data:
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# Optional: define networks if needed
+networks:
+  default:
+    name: klikchat-network

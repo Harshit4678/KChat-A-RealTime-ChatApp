@@ -175,34 +175,29 @@ export const login = async (req, res) => {
 
 export const googleAuth = async (req, res) => {
   try {
-    const { token } = req.body; // frontend se Google ka id_token aayega
-
+    const { token } = req.body;
     if (!token) return res.status(400).json({ message: "Token missing" });
 
-    // Verify token with Google
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    const payload = ticket.getPayload();
-    const { email, name, picture } = payload;
+    const { email, name, picture, sub } = ticket.getPayload();
 
-    // Check if user already exists
     let user = await User.findOne({ email: email.toLowerCase() });
-
     if (!user) {
-      // Create new user without password
+      const randomPassword = crypto.randomBytes(16).toString("hex");
       user = await User.create({
         fullName: name,
         email: email.toLowerCase(),
-        profilePic: picture,
-        password: null, // google user has no password
+        profilePic: picture || "https://example.com/default-avatar.png",
+        password: randomPassword,
+        googleId: sub,
         isVerified: true,
       });
     }
 
-    // JWT cookie generate
     generateToken(user._id, res);
 
     res.status(200).json({
@@ -212,8 +207,9 @@ export const googleAuth = async (req, res) => {
       profilePic: user.profilePic,
     });
   } catch (error) {
-    console.error("Error in googleAuth controller:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 };
 

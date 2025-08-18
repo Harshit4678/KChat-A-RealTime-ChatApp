@@ -22,10 +22,10 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
       minlength: 6,
-    },
-    googleId: { type: String },
+    }, // required removed
+    googleId: { type: String, unique: true, sparse: true }, // only for OAuth users
+    isVerified: { type: Boolean, default: false },
     profilePic: {
       type: String,
       default: "",
