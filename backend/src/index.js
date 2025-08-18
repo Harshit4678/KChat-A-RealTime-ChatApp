@@ -33,7 +33,6 @@ app.use(
   })
 );
 
-// Debugging route for cookie check
 app.get("/api/ping", (req, res) => {
   const token = req.cookies.jwt;
   res.json({
