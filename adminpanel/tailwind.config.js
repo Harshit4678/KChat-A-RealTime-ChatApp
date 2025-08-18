@@ -4,14 +4,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#4F46E5",
-        secondary: "#6366F1",
-        accent: "#10B981",
+        primary: "#a78bfa", // Cyan
+        secondary: "#2563eb", // Lighter blue (than before)
+        accent: "#00ffff", // Lighter violet for softer glow
         danger: "#EF4444",
       },
+
       animation: {
-        fadeIn: "fadeIn 0.6s ease-in-out",
+        fadeIn: "fadeIn 0.4s ease-in-out",
+        "bounce-pulse": "bounce 2s infinite, pulse 2s infinite",
+        "slow-spin": "spin 3s linear infinite",
+        "spin-slow": "spin 2s linear infinite",
       },
+      blur: {
+        "3xl": "64px",
+      },
+
       keyframes: {
         fadeIn: { "0%": { opacity: 0 }, "100%": { opacity: 1 } },
       },

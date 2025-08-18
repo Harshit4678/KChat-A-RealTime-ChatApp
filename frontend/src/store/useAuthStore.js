@@ -84,6 +84,21 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  googleLogin: async (token) => {
+    set({ isLoggingIn: true });
+    try {
+      // yahan token google se aaega (frontend button -> backend API)
+      const res = await axiosIntance.post("/auth/google", { token });
+      set({ authUser: res.data, banInfo: null });
+      toast.success("Logged in with Google successfully");
+      get().connectSocket();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Google login failed");
+    } finally {
+      set({ isLoggingIn: false });
+    }
+  },
+
   logout: async () => {
     try {
       await axiosIntance.post("/auth/logout");

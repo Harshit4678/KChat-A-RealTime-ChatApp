@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { motion as Motion } from "framer-motion";
 import toast from "react-hot-toast";
 import OtpInput from "../components/OtpInput.jsx";
+import GoogleAuthButton from "../components/GoogleAuthButton.jsx";
 
 const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -111,7 +112,7 @@ const SignUpPage = () => {
 
   if (showOtpScreen) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-white via-blue-50 to-purple-50">
+      <div className="min-h-screen flex items-center justify-center px-4 py-12  bg-gradient-to-br from-white via-blue-50 to-purple-50">
         <div className="backdrop-blur-xl  rounded-2xl p-6 sm:p-10 max-w-md w-full space-y-6 animate-fade-in-up">
           <div className="flex flex-col items-center space-y-3">
             {/* <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white text-lg font-bold animate-spin-slow">
@@ -163,7 +164,7 @@ const SignUpPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-10 sm:pt-20 md:pt-28 flex items-center justify-center bg-white text-gray-800 font-sans px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen pt-20  sm:pt-24 flex items-center justify-center bg-white text-gray-800 font-sans px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div
         ref={orbRef}
         className="absolute top-6 left-6 w-28 h-28 bg-gradient-to-br from-purple-400 to-blue-300 rounded-full blur-3xl opacity-30 pointer-events-none animate-pulse"
@@ -296,6 +297,18 @@ const SignUpPage = () => {
             <div className="absolute inset-0 bg-white opacity-5 blur-sm animate-pulse z-0" />
           </Motion.button>
         </form>
+
+        {/* Divider */}
+        <div className="flex items-center  gap-4 my-4">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-gray-400 text-sm">OR</span>
+          <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        {/* Google Login Button */}
+        <div className="flex justify-center">
+          <GoogleAuthButton />
+        </div>
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500 pt-2">

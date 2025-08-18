@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { motion as Motion } from "framer-motion";
 
+import GoogleAuthButton from "../components/GoogleAuthButton.jsx";
+
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoggingIn } = useAuthStore();
@@ -22,7 +24,7 @@ const LoginPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white text-gray-800 font-sans px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-white text-gray-800 font-sans px-4 sm:px-6 lg:px-8 relative overflow-hidden pt-0 md:pt-20">
       {/* Floating Orb */}
       <div className="absolute top-6 left-6 w-28 h-28 bg-gradient-to-br from-purple-400 to-blue-300 rounded-full blur-3xl opacity-30 pointer-events-none animate-pulse" />
 
@@ -144,6 +146,17 @@ const LoginPage = () => {
           </Motion.button>
         </form>
 
+        {/* Divider */}
+        <div className="flex items-center gap-4 my-4">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-gray-400 text-sm">OR</span>
+          <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        {/* Google Login Button */}
+        <div className="flex justify-center">
+          <GoogleAuthButton />
+        </div>
         {/* Footer */}
         <div className="text-center text-sm text-gray-500 pt-6 space-y-2">
           <Link
