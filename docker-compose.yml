@@ -4,59 +4,25 @@ services:
   mongo:
     image: mongo:6.0
     container_name: klikchat_mongo
-    restart: unless-stopped
+    restart: always
+    ports:
+      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-    ports:
-      - "27017:27017"
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "mongo",
-          "--username",
-          "root",
-          "--password",
-          "example",
-          "--authenticationDatabase",
-          "admin",
-          "--eval",
-          "db.adminCommand('ping')",
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 20
     volumes:
       - mongo-data:/data/db
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     container_name: klikchat_backend
-    restart: unless-stopped
+    restart: always
     env_file:
       - ./backend/.env
     ports:
       - "3000:3000"
     depends_on:
-      mongo:
-        condition: service_healthy
-    command: npm run start
-
-  # Optional: frontend (Vite/React)
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: klikchat_frontend
-  #   restart: unless-stopped
-  #   ports:
-  #     - "5173:5173"
-  #   depends_on:
-  #     backend:
-  #       condition: service_started
+      - mongo
 
 volumes:
   mongo-data:
