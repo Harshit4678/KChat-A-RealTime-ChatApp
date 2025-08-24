@@ -1,33 +1,52 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore.js";
-import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
-import gsap from "gsap";
 import { motion as Motion } from "framer-motion";
-
 import GoogleAuthButton from "../components/GoogleAuthButton.jsx";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoggingIn } = useAuthStore();
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const orbRef = useRef(null);
+  const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    gsap.to(orbRef.current, {
-      y: -15,
-      duration: 1.4,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut",
-    });
-  }, []);
+  // ✅ Validation function
+  const validate = () => {
+    let newErrors = {};
+
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // ✅ Form Submit
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!validate()) return toast.error("Please fix the errors above."); // stop if invalid
+    login(formData);
+  };
+
+  // ✅ Input change handler
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" }); // clear error when typing
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white text-gray-800 font-sans px-4 sm:px-6 lg:px-8 relative overflow-hidden pt-0 md:pt-20">
-      {/* Floating Orb */}
-      <div className="absolute top-6 left-6 w-28 h-28 bg-gradient-to-br from-purple-400 to-blue-300 rounded-full blur-3xl opacity-30 pointer-events-none animate-pulse" />
-
       <Motion.div
         className="w-full max-w-md space-y-4 z-10"
         initial={{ opacity: 0, y: 40 }}
@@ -41,20 +60,14 @@ const LoginPage = () => {
             whileHover={{ scale: 1.04 }}
           >
             <div className="relative z-10 group flex items-center gap-1">
-              {/* K with pulse */}
-              <span className="inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white font-black text-xl sm:text-2xl leading-none transform transition-transform group-hover:scale-105 animate-bounce-pulse">
+              <span className="inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white font-black text-xl sm:text-2xl animate-bounce-pulse">
                 K
               </span>
-
-              <span className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-pulse">
+              <span className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent animate-pulse">
                 LikChat
-                <span className="absolute -top-1 text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent transition-all duration-300 group-hover:brightness-110 animate-bounce-pulse">
-                  💬
-                </span>
+                <span className="absolute -top-1 text-xl sm:text-2xl">💬</span>
               </span>
-
-              {/* Glow ring */}
-              <div className="absolute inset-0 rounded-xl blur-lg opacity-20 z-0 bg-gradient-to-r from-primary to-accent scale-110" />
+              <div className="absolute inset-0 rounded-xl blur-lg opacity-20 bg-gradient-to-r from-primary to-accent scale-110" />
             </div>
             <h1 className="text-2xl font-bold font-serif text-primary">
               Login
@@ -66,14 +79,7 @@ const LoginPage = () => {
         </div>
 
         {/* Login Form */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            login(formData);
-          }}
-          className="space-y-2"
-          autoComplete="off"
-        >
+        <form onSubmit={handleSubmit} className="space-y-2" autoComplete="off">
           {/* Email */}
           <div className="form-control">
             <label className="label text-gray-700 font-medium">Email</label>
@@ -81,18 +87,18 @@ const LoginPage = () => {
               <Mail className="absolute left-3 top-3 size-5 text-gray-400" />
               <input
                 type="email"
-                required
+                name="email"
                 placeholder="you@example.com"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    email: e.target.value.toLowerCase(),
-                  })
-                }
-                className="input input-bordered w-full pl-11 py-3 rounded-lg bg-gray-50 text-gray-800 border-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                onChange={handleChange}
+                className={`input input-bordered w-full pl-11 py-3 rounded-lg bg-gray-50 text-gray-800 border ${
+                  errors.email ? "border-red-400" : "border-gray-200"
+                } placeholder:text-gray-400 focus:ring-2 focus:ring-purple-400 focus:outline-none`}
               />
             </div>
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
 
           {/* Password */}
@@ -102,13 +108,13 @@ const LoginPage = () => {
               <Lock className="absolute left-3 top-3 size-5 text-gray-400" />
               <input
                 type={showPassword ? "text" : "password"}
-                required
+                name="password"
                 placeholder="********"
                 value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className="input input-bordered w-full pl-11 pr-10 py-3 rounded-lg bg-gray-50 text-gray-800 border-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                onChange={handleChange}
+                className={`input input-bordered w-full pl-11 pr-10 py-3 rounded-lg bg-gray-50 text-gray-800 border ${
+                  errors.password ? "border-red-400" : "border-gray-200"
+                } placeholder:text-gray-400 focus:ring-2 focus:ring-purple-400 focus:outline-none`}
               />
               <button
                 type="button"
@@ -122,6 +128,9 @@ const LoginPage = () => {
                 )}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
           </div>
 
           {/* Submit */}
@@ -157,6 +166,7 @@ const LoginPage = () => {
         <div className="flex justify-center">
           <GoogleAuthButton />
         </div>
+
         {/* Footer */}
         <div className="text-center text-sm text-gray-500 pt-6 space-y-2">
           <Link

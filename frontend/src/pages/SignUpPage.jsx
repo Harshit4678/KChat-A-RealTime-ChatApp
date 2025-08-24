@@ -21,6 +21,12 @@ const SignUpPage = () => {
     email: "",
     password: "",
   });
+  const [errors, setErrors] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+  });
+
   const navigate = useNavigate();
   const { isSigningUp, setAuthUser } = useAuthStore();
   const orbRef = useRef(null);
@@ -35,26 +41,59 @@ const SignUpPage = () => {
     });
   }, []);
 
-  const validateForm = () => {
-    if (!formData.fullName.trim()) return toast.error("Full name is required");
-    if (!formData.email.trim()) return toast.error("Email is required");
-    if (!/\S+@\S+\.\S+/.test(formData.email))
-      return toast.error("Invalid email format");
-    if (!formData.password) return toast.error("Password is required");
-    if (formData.password.length < 6)
-      return toast.error("Password must be at least 6 characters");
-    return true;
+  const validateField = (name, value) => {
+    switch (name) {
+      case "fullName":
+        if (!value.trim()) return "Full name is required";
+        if (value.trim().length < 3) return "Must be at least 3 characters";
+        if (!/^[A-Za-z\s]+$/.test(value))
+          return "Only letters and spaces allowed";
+        return "";
+      case "email":
+        if (!value.trim()) return "Email is required";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+          return "Enter a valid email address";
+        return "";
+      case "password":
+        if (!value.trim()) return "Password is required";
+        if (value.length < 8) return "At least 8 characters required";
+        if (!/[A-Z]/.test(value)) return "Must include 1 uppercase";
+        if (!/[a-z]/.test(value)) return "Must include 1 lowercase";
+        if (!/[0-9]/.test(value)) return "Must include 1 number";
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(value))
+          return "Must include 1 special character";
+        return "";
+      default:
+        return "";
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+
+    // Validate all fields
+    const newErrors = {
+      fullName: validateField("fullName", formData.fullName),
+      email: validateField("email", formData.email),
+      password: validateField("password", formData.password),
+    };
+
+    setErrors(newErrors);
+
+    // Agar errors me se koi bhi khali nahi hai to submit mat karo
+    if (Object.values(newErrors).some((err) => err !== "")) {
+      toast.error("Please fix errors before submitting");
+      return;
+    }
+
     try {
       const res = await axiosIntance.post("/auth/signup", formData);
       toast.success(res.data.message || "Account created successfully!");
       setOtpEmail(formData.email);
       setShowOtpScreen(true);
       setResendTimer(30);
+
+      // resend timer
       const timer = setInterval(() => {
         setResendTimer((prev) => {
           if (prev <= 1) {
@@ -218,11 +257,18 @@ const SignUpPage = () => {
                 maxLength={20}
                 placeholder="Your full name"
                 value={formData.fullName}
-                onChange={(e) =>
-                  setFormData({ ...formData, fullName: e.target.value })
-                }
+                onChange={(e) => {
+                  setFormData({ ...formData, fullName: e.target.value });
+                  setErrors({
+                    ...errors,
+                    fullName: validateField("fullName", e.target.value),
+                  });
+                }}
                 className="input input-bordered w-full pl-11 py-3 rounded-lg bg-gray-50 border-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-purple-400 focus:outline-none"
               />
+              {errors.fullName && (
+                <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+              )}
             </div>
           </div>
 
@@ -233,17 +279,20 @@ const SignUpPage = () => {
               <Mail className="absolute left-3 top-3 size-5 text-gray-400" />
               <input
                 type="email"
-                required
                 placeholder="you@example.com"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    email: e.target.value.toLowerCase(),
-                  })
-                }
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value });
+                  setErrors({
+                    ...errors,
+                    email: validateField("email", e.target.value),
+                  });
+                }}
                 className="input input-bordered w-full pl-11 py-3 rounded-lg bg-gray-50 border-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-purple-400 focus:outline-none"
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
           </div>
 
@@ -254,14 +303,20 @@ const SignUpPage = () => {
               <Lock className="absolute left-3 top-3 size-5 text-gray-400" />
               <input
                 type={showPassword ? "text" : "password"}
-                required
                 placeholder="********"
                 value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                onChange={(e) => {
+                  setFormData({ ...formData, password: e.target.value });
+                  setErrors({
+                    ...errors,
+                    password: validateField("password", e.target.value),
+                  });
+                }}
                 className="input input-bordered w-full pl-11 pr-10 py-3 rounded-lg bg-gray-50 border-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-purple-400 focus:outline-none"
               />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
