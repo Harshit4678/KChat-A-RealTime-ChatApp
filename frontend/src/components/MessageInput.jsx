@@ -47,6 +47,16 @@ const MessageInput = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const emitTyping = (isTyping = true) => {
+    if (socket && currentChatUser && authUser) {
+      socket.emit("typing", {
+        senderId: authUser._id,
+        receiverId: currentChatUser._id,
+        isTyping,
+      });
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
@@ -61,7 +71,7 @@ const MessageInput = () => {
 
       setText("");
       setImagePreview(null);
-      socket.emit("typing", { to: currentChatUser._id, isTyping: false });
+      emitTyping(false); // Stop typing indicator
 
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (textareaRef.current) textareaRef.current.focus();
@@ -79,28 +89,16 @@ const MessageInput = () => {
 
   const handleChange = (e) => {
     setText(e.target.value);
-    socket.emit("typing", { to: currentChatUser._id, isTyping: true });
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      socket.emit("typing", {
-        senderId: authUser._id,
-        receiverId: currentChatUser._id,
-      });
-    }, 1000);
+    typingTimeoutRef.current = setTimeout(() => emitTyping(), 1500);
   };
 
   const handleEmojiClick = (emojiObject) => {
     setText((prev) => prev + emojiObject.emoji);
-    socket.emit("typing", { to: currentChatUser._id, isTyping: true });
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      socket.emit("typing", {
-        senderId: authUser._id,
-        receiverId: currentChatUser._id,
-      });
-    }, 1000);
+    typingTimeoutRef.current = setTimeout(() => emitTyping(), 1500);
   };
 
   useEffect(() => {
@@ -124,9 +122,7 @@ const MessageInput = () => {
     if (!socket || !currentChatUser) return;
 
     const handleTypingStatus = ({ from, isTyping }) => {
-      if (from === currentChatUser._id) {
-        setOtherUserTyping(isTyping);
-      }
+      if (from === currentChatUser._id) setOtherUserTyping(isTyping);
     };
 
     socket.on("typing", handleTypingStatus);
@@ -178,8 +174,8 @@ const MessageInput = () => {
             ref={textareaRef}
             rows={1}
             className="w-full rounded-lg resize-none max-h-40 overflow-y-auto pr-12 pl-3 py-2 border focus:outline-none focus:ring-2 transition-colors
-    bg-white text-black border-gray-300 focus:ring-primary 
-    dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
+              bg-white text-black border-gray-300 focus:ring-primary 
+              dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
             placeholder="Type a message..."
             value={text}
             onChange={handleChange}
